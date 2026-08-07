@@ -1,0 +1,3038 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Dashboards Unificados | NIPs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js">
+    </script>
+    <style>
+        /* ── RESET E BASE ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(145deg, #0d3b2a 0%, #1a6b4a 40%, #2a8a5e 100%);
+            color: #1e293b;
+            padding: 20px;
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e9ecf2;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #7fb096;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5c8a72;
+        }
+
+        .main-wrapper {
+            max-width: 1440px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .main-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 28px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #eef2f7;
+            flex-wrap: wrap;
+        }
+
+        .main-tab-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 14px;
+            border: none;
+            background: transparent;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3a4e62;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: inherit;
+            text-align: center;
+        }
+
+        .main-tab-btn:hover {
+            background: #e0f3e8;
+            color: #004d2e;
+        }
+
+        .main-tab-btn.active {
+            background: #00a859;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 168, 89, 0.25);
+        }
+
+        .main-tab-btn .tab-icon {
+            font-size: 15px;
+        }
+
+        .main-panel {
+            display: none;
+            animation: fadeUp 0.35s ease;
+        }
+
+        .main-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── ESTILOS GERAIS DOS DASHBOARDS ── */
+        .dashboard-container,
+        .dashboard {
+            background: transparent;
+            padding: 0;
+            box-shadow: none;
+            border: none;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 1.8rem;
+            border-bottom: 2px solid #d1dbe8;
+            padding-bottom: 0.8rem;
+        }
+
+        .title-section h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #0f3b2c, #1e7b5e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .title-section p {
+            font-weight: 500;
+            color: #4b5563;
+            margin-top: 4px;
+            font-size: 0.9rem;
+        }
+
+        .badge-date {
+            background: #f1f5f9;
+            padding: 6px 16px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #0f3b2c;
+            border: 1px solid #cbd5e1;
+        }
+
+        .badge-date i {
+            margin-right: 6px;
+            color: #2c7a64;
+        }
+
+        .kpi-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: #f8fafc;
+            border-radius: 28px;
+            padding: 0.8rem 1.5rem;
+            flex: 1;
+            min-width: 150px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 12px 20px -12px rgba(0, 0, 0, 0.08);
+        }
+
+        .kpi-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .kpi-unit {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2c7a64;
+        }
+
+        .trend-note {
+            font-size: 0.7rem;
+            color: #5b6e8c;
+            margin-top: 4px;
+        }
+
+        .charts-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            flex: 1;
+            min-width: 260px;
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 1.2rem 1rem 1.2rem 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eef2f6;
+            transition: transform 0.2s;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 4px solid;
+            padding-left: 14px;
+            color: #1e293b;
+        }
+
+        .chart-title i {
+            font-size: 1.1rem;
+        }
+
+        .chart-canvas-wrapper {
+            position: relative;
+            height: auto;
+            min-height: 280px;
+        }
+
+        canvas {
+            max-height: 340px;
+            width: 100% !important;
+            height: auto !important;
+            background: transparent;
+            display: block;
+        }
+
+        .table-section {
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 1rem 0 0.2rem 0;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+            border: 1px solid #eef2f6;
+            margin-bottom: 1.5rem;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 0 1.5rem 0.8rem 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .table-header h3 {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+
+        .badge-table {
+            background: #f1f5f9;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #2c7a64;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.9rem 1rem 0.8rem 1.5rem;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.8rem;
+            letter-spacing: 0.3px;
+            background-color: #fafcff;
+        }
+
+        td {
+            padding: 0.8rem 1rem 0.8rem 1.5rem;
+            border-bottom: 1px solid #edf2f7;
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .highlight-text {
+            font-weight: 700;
+            color: #0f3b2c;
+        }
+
+        .total-row {
+            background: #f1f5f9;
+            font-weight: 700;
+        }
+
+        .total-row td {
+            font-weight: 700;
+            color: #0c4e3a;
+            border-top: 1px solid #d1dbe8;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.7rem;
+            margin-top: 1.5rem;
+            color: #5b6e8c;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.2rem;
+        }
+
+        /* Estilos específicos para os dashboards comparativos */
+        .transition-alert {
+            background: #f1f5f9;
+            border-radius: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #f59e0b;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 0.8rem;
+        }
+
+        .transition-alert p {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .badge-sai {
+            background-color: #ef4444;
+            color: white;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        .badge-entra {
+            background-color: #10b981;
+            color: white;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        .grid-explicativo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+            justify-content: space-between;
+        }
+
+        .card-explicacao {
+            background: #f8fafc;
+            border-radius: 1.5rem;
+            padding: 1rem 1.5rem;
+            flex: 1;
+            min-width: 180px;
+            border: 1px solid #e2e8f0;
+            transition: 0.2s;
+        }
+
+        .card-explicacao h3 {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.6rem;
+            color: #0f172a;
+        }
+
+        .badge-up {
+            background-color: #10b981;
+            color: white;
+            border-radius: 40px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.65rem;
+            font-weight: bold;
+        }
+
+        .badge-down {
+            background-color: #ef4444;
+            color: white;
+            border-radius: 40px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.65rem;
+        }
+
+        .variacao-item {
+            margin: 8px 0;
+            font-size: 0.85rem;
+            border-bottom: 1px dashed #cbd5e1;
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            color: #334155;
+        }
+
+        .percent-range {
+            font-weight: 600;
+            color: #2c7a64;
+            background: #e6f7f0;
+            padding: 0.1rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .destaque-num {
+            font-weight: 700;
+            color: #2c7a64;
+        }
+
+        .grafico-container {
+            background: #ffffff;
+            border-radius: 1.8rem;
+            padding: 1.2rem;
+            margin: 0.5rem 0 1.5rem 0;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .canvas-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .legenda-nota {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            background: #f8fafc;
+            display: inline-block;
+            width: auto;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            color: #4b5563;
+        }
+
+        .tabela-aux {
+            background: #ffffff;
+            border-radius: 1.2rem;
+            padding: 1rem 1.2rem;
+            margin-top: 1.5rem;
+            overflow-x: auto;
+            border: 1px solid #eef2f6;
+        }
+
+        .tabela-aux table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            color: #1e293b;
+        }
+
+        .tabela-aux th,
+        .tabela-aux td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tabela-aux th {
+            background-color: #f8fafc;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .tabela-aux .highlight-row td {
+            background: #f1f5f9;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            color: #5b6e8c;
+        }
+
+        hr {
+            border-color: #e2e8f0;
+            margin: 0.6rem 0;
+        }
+
+        .subtitulo {
+            color: #4b5563;
+            margin-bottom: 1.2rem;
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+            padding-left: 0.5rem;
+        }
+
+        @media (max-width: 780px) {
+            body {
+                padding: 10px;
+            }
+            .main-wrapper {
+                padding: 1rem 0.8rem 0.2rem 0.8rem;
+            }
+            .main-tab-btn {
+                min-width: 80px;
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+            .kpi-value {
+                font-size: 1.6rem;
+            }
+            .chart-title {
+                font-size: 1rem;
+            }
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .title-section h1 {
+                font-size: 1.4rem;
+            }
+            .charts-row {
+                flex-direction: column;
+            }
+            .chart-card {
+                min-width: 100%;
+            }
+            td,
+            th {
+                padding: 0.6rem 0.8rem;
+            }
+            .transition-alert {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .grid-explicativo {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-tabs {
+                flex-direction: column;
+                gap: 4px;
+            }
+            .main-tab-btn {
+                min-width: 100%;
+                justify-content: flex-start;
+                padding: 10px 14px;
+            }
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .kpi-card {
+                padding: 0.6rem 1rem;
+                min-width: 0;
+            }
+            .kpi-value {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+
+        <!-- ─── TABS PRINCIPAIS ─── -->
+        <div class="main-tabs" role="tablist">
+            <button class="main-tab-btn active" data-main-tab="tab1" role="tab">
+                <span class="tab-icon">📈</span> NIPs por Natureza
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab7" role="tab">
+                <span class="tab-icon">📊</span> Evolução jul/2025 a jul/2026
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab8" role="tab">
+                <span class="tab-icon">📈</span> Evolução out/2024 a jul/2026
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab2" role="tab">
+                <span class="tab-icon">🏆</span> TOP 5 Demandas
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab3" role="tab">
+                <span class="tab-icon">🔄</span> Comp. Demandas
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab9" role="tab">
+                <span class="tab-icon">📦</span> Objetos Gerais
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab10" role="tab">
+                <span class="tab-icon">📊</span> Comp. Objetos
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab4" role="tab">
+                <span class="tab-icon">🗺️</span> TOP 5 Cidades
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab5" role="tab">
+                <span class="tab-icon">🏙️</span> Comp. Cidades
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab6" role="tab">
+                <span class="tab-icon">🏢</span> TOP Coordenações
+            </button>
+            <button class="main-tab-btn" data-main-tab="tab11" role="tab">
+                <span class="tab-icon">🔄</span> Comp. Coordenações
+            </button>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 1 – NIPs por Natureza (Jan a Jul/2026)                   -->
+        <!-- ============================================================ -->
+        <div class="main-panel active" id="tab1" role="tabpanel">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <div class="title-section">
+                        <h1><i class="fas fa-chart-line" style="color:#2c7a64; margin-right:8px;"></i> NIPs por Natureza | Evolução Mensal</h1>
+                        <p>Distribuição Assistencial vs Não Assistencial · Janeiro a Julho (7 meses)</p>
+                    </div>
+                    <div class="badge-date"><i class="far fa-calendar-alt"></i> Período: Jan - Jul / 2026</div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-chart-line"></i> Maior mês (total)</div>
+                        <div class="kpi-value" id="d1_topMes">—</div>
+                        <div class="trend-note" id="d1_topMesValor"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-layer-group"></i> Total Geral (NIPs)</div>
+                        <div class="kpi-value" id="d1_totalGeral">—</div>
+                        <div class="trend-note">Jan + Fev + Mar + Abr + Mai + Jun + Jul</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-calendar-week"></i> Média mensal</div>
+                        <div class="kpi-value" id="d1_mediaMensal">—</div>
+                        <div class="trend-note">Total / 7 meses</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-percent"></i> Participação Assistencial</div>
+                        <div class="kpi-value" id="d1_percentualAssist">—<span class="kpi-unit">%</span></div>
+                        <div class="trend-note">Soma Assistencial / Total</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#3b82f6;">
+                            <i class="fas fa-chart-column" style="color:#3b82f6;"></i> Comparativo mensal por natureza
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d1_barChartGrouped" width="400" height="320" style="max-height:320px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-percent"></i> Valores absolutos por mês (barras agrupadas)
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#10b981;">
+                            <i class="fas fa-chart-pie" style="color:#10b981;"></i> Proporção total (Assistencial × Não Assistencial)
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d1_pieChartTotal" width="400" height="320" style="max-height:320px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-chart-simple"></i> Participação acumulada dos 7 meses
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3><i class="fas fa-table-list"></i> Detalhamento mensal por natureza</h3>
+                        <div class="badge-table"><i class="far fa-clock"></i> Dados consolidados Jan-Jul</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead><tr><th>Mês</th><th>Assistencial</th><th>Não Assistencial</th><th>Total NIPs</th><th>% Assistencial</th></tr></thead>
+                            <tbody id="d1_tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="footer-note"><i class="fas fa-chart-pie"></i> Dados de NIPs por natureza assistencial · Total acumulado: <span id="d1_footerTotal"></span> NIPs</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 7 – Evolução jul/2025 a jul/2026                         -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab7" role="tabpanel">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <div class="title-section">
+                        <h1><i class="fas fa-chart-line" style="color:#2c7a64; margin-right:8px;"></i> Evolução | jul/2025 a jul/2026</h1>
+                        <p>Quantidade de demandas - Mediana: 88</p>
+                    </div>
+                    <div class="badge-date"><i class="far fa-calendar-alt"></i> Período: Jul 2025 - Jul 2026</div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-arrow-up"></i> Maior mês</div>
+                        <div class="kpi-value" id="d7_maxMes">—</div>
+                        <div class="trend-note" id="d7_maxValor"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-arrow-down"></i> Menor mês</div>
+                        <div class="kpi-value" id="d7_minMes">—</div>
+                        <div class="trend-note" id="d7_minValor"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-calculator"></i> Total acumulado</div>
+                        <div class="kpi-value" id="d7_totalGeral">—</div>
+                        <div class="trend-note">Soma de todos os meses</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-chart-simple"></i> Mediana</div>
+                        <div class="kpi-value" id="d7_mediana">—</div>
+                        <div class="trend-note">Valor central do período</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-calculator"></i> Média</div>
+                        <div class="kpi-value" id="d7_media">—</div>
+                        <div class="trend-note">Média aritmética</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card" style="flex: 1 1 100%;">
+                        <div class="chart-title" style="border-left-color:#10b981;">
+                            <i class="fas fa-chart-line" style="color:#10b981;"></i> Evolução da quantidade de demandas (mediana: 88)
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d7_lineChart" width="900" height="340" style="max-height:340px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-calendar-alt"></i> Dados mensais de jul/2025 a jul/2026
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3><i class="fas fa-table-list"></i> Detalhamento mensal</h3>
+                        <div class="badge-table"><i class="far fa-clock"></i> 13 meses</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead><tr><th>Mês</th><th>Quantidade</th><th>Variação mensal (%)</th></tr></thead>
+                            <tbody id="d7_tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="footer-note"><i class="fas fa-chart-pie"></i> Total de demandas no período: <span id="d7_footerTotal"></span></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 8 – Evolução out/2024 a jul/2026                         -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab8" role="tabpanel">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <div class="title-section">
+                        <h1><i class="fas fa-chart-line" style="color:#2c7a64; margin-right:8px;"></i> Evolução | out/2024 a jul/2026</h1>
+                        <p>Quantidade de demandas - Mediana: 74</p>
+                    </div>
+                    <div class="badge-date"><i class="far fa-calendar-alt"></i> Período: Out 2024 - Jul 2026</div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-arrow-up"></i> Maior mês</div>
+                        <div class="kpi-value" id="d8_maxMes">—</div>
+                        <div class="trend-note" id="d8_maxValor"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-arrow-down"></i> Menor mês</div>
+                        <div class="kpi-value" id="d8_minMes">—</div>
+                        <div class="trend-note" id="d8_minValor"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-calculator"></i> Total acumulado</div>
+                        <div class="kpi-value" id="d8_totalGeral">—</div>
+                        <div class="trend-note">Soma de todos os meses</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-chart-simple"></i> Mediana</div>
+                        <div class="kpi-value" id="d8_mediana">—</div>
+                        <div class="trend-note">Valor central do período</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-calculator"></i> Média</div>
+                        <div class="kpi-value" id="d8_media">—</div>
+                        <div class="trend-note">Média aritmética</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card" style="flex: 1 1 100%;">
+                        <div class="chart-title" style="border-left-color:#10b981;">
+                            <i class="fas fa-chart-line" style="color:#10b981;"></i> Evolução da quantidade de demandas (mediana: 74)
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d8_lineChart" width="900" height="340" style="max-height:340px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-calendar-alt"></i> Dados mensais de out/2024 a jul/2026
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3><i class="fas fa-table-list"></i> Detalhamento mensal</h3>
+                        <div class="badge-table"><i class="far fa-clock"></i> 22 meses</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead><tr><th>Mês</th><th>Quantidade</th><th>Variação mensal (%)</th></tr></thead>
+                            <tbody id="d8_tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="footer-note"><i class="fas fa-chart-pie"></i> Total de demandas no período: <span id="d8_footerTotal"></span></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 2 – TOP 5 Demandas (Julho/2026)                           -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab2" role="tabpanel">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <div class="title-section">
+                        <h1><i class="fas fa-chart-bar" style="color:#2c7a64; margin-right:8px;"></i> TOP 5 Demandas | Julho/2026</h1>
+                        <p>Distribuição das principais demandas (quantidade de ocorrências)</p>
+                    </div>
+                    <div class="badge-date"><i class="far fa-calendar-alt"></i> Período: Julho de 2026</div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-trophy"></i> Principal demanda</div>
+                        <div class="kpi-value" id="d2_topCategoria">—</div>
+                        <div class="trend-note" id="d2_topValor"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-layer-group"></i> Total geral</div>
+                        <div class="kpi-value" id="d2_totalGeral">—</div>
+                        <div class="trend-note">Soma de todas as demandas</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-chart-simple"></i> Média por demanda</div>
+                        <div class="kpi-value" id="d2_mediaCategoria">—</div>
+                        <div class="trend-note">Distribuição média</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-percent"></i> Demanda dominante</div>
+                        <div class="kpi-value" id="d2_percentualTop">—<span class="kpi-unit">%</span></div>
+                        <div class="trend-note">Participação no total</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#3b82f6;">
+                            <i class="fas fa-chart-bar" style="color:#3b82f6;"></i> Volume por Demanda (horizontal)
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d2_barChartHorizontal" width="400" height="320" style="max-height:340px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-percent"></i> Valores absolutos e percentuais
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#10b981;">
+                            <i class="fas fa-chart-pie" style="color:#10b981;"></i> Distribuição Percentual
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d2_pieChart" width="400" height="320" style="max-height:320px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-chart-simple"></i> Participação de cada demanda
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3><i class="fas fa-table-list"></i> Detalhamento por Demanda</h3>
+                        <div class="badge-table"><i class="far fa-clock"></i> TOP 5 demandas - Julho 2026</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead><tr><th>Demanda</th><th>Quantidade</th><th>Participação (%)</th></tr></thead>
+                            <tbody id="d2_tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="footer-note"><i class="fas fa-chart-pie"></i> Distribuição do TOP 5 demandas · Total de ocorrências: <span id="d2_footerTotal"></span></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 3 – Comparativo Demandas (Junho vs Julho)                 -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab3" role="tabpanel">
+            <div class="dashboard">
+                <h1><i class="fas fa-chart-line" style="color:#2c7a64; margin-right:8px;"></i> Comparativo mensal | Junho → Julho/2026</h1>
+                <div class="subtitulo">Evolução das TOP 5 demandas • Mudança no ranking: sai REEMBOLSO, entra MENSALIDADES / COBRANÇAS</div>
+
+                <div class="transition-alert">
+                    <p><i class="fas fa-exchange-alt"></i> <strong>Transição no TOP 5:</strong>
+                        <span class="badge-sai">✖ SAI REEMBOLSO (5 → 3 em julho, fora do TOP5)</span> →
+                        <span class="badge-entra">✔ ENTRA MENSALIDADES / COBRANÇAS (13 | 10,4%)</span>
+                    </p>
+                    <p style="font-size:0.85rem;">📌 Observação: Em julho, "Reembolso" caiu de 5 para 3 ocorrências, deixando de figurar entre as 5 maiores demandas. "Mensalidades ou outras cobranças" entrou com 13 ocorrências, impulsionado por reajustes ou mudanças nas regras de cobrança.</p>
+                </div>
+
+                <div class="grid-explicativo">
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-arrow-up" style="color:#10b981;"></i> <span class="badge-up">CRESCIMENTO / ENTRADA</span></h3>
+                        <div class="variacao-item"><span>📋 ROL DE PROCEDIMENTOS</span><span class="percent-range">(50,0% → 44,0%)</span></div>
+                        <div class="variacao-item"><span>⏳ PRAZOS MÁXIMOS</span><span class="percent-range">(16,7% → 21,6%)</span></div>
+                        <div class="variacao-item"><span>📜 REGRAS DE ACESSO</span><span class="percent-range">(16,7% → 16,0%)</span></div>
+                        <div class="variacao-item"><span>💰 MENSALIDADES (Julho)</span><span style="color:#2c7a64;">Entra com 10,4% em julho</span></div>
+                    </div>
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-arrow-down" style="color:#ef4444;"></i> <span class="badge-down">RECUO / SAÍDA</span></h3>
+                        <div class="variacao-item"><span>🔄 REEMBOLSO</span><span style="color:#ef4444;">Sai do TOP5 (5 → 3)</span></div>
+                        <div class="variacao-item"><span>🏥 REDE DE ATENDIMENTO</span><span class="percent-range">(10,3% → 8,0%)</span></div>
+                        <div class="variacao-item"><span>📊 ROL DE PROCEDIMENTOS</span><span style="color:#ef4444;">Perde participação relativa (50% → 44%)</span></div>
+                    </div>
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-chart-simple"></i> VOLUME TOTAL</h3>
+                        <div style="margin-top:10px;">
+                            <div><strong>📆 Junho:</strong> 78 demandas (TOP5)</div>
+                            <div><strong>📌 Julho:</strong> 125 demandas (TOP5) + Reembolso (3) = 128 total</div>
+                            <hr style="margin:8px 0;">
+                            <div>⬆️ Crescimento de <strong class="destaque-num">+64,1%</strong> no total geral (considerando Reembolso)</div>
+                            <div style="font-size:0.75rem; margin-top:6px;">*Base consolidada com todos os itens mencionados</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grafico-container">
+                    <h3 style="margin-bottom:0.5rem; font-weight:600;"><i class="fas fa-chart-column"></i> Participação percentual de cada demanda no total mensal</h3>
+                    <div class="canvas-wrapper"><canvas id="d3_comparativoChart" width="900" height="400" style="background:#ffffff; border-radius:1rem; padding:8px;"></canvas></div>
+                    <div style="display:flex; justify-content:center; gap:2rem; margin-top:0.8rem; flex-wrap:wrap;">
+                        <span style="background:#3b82f6; padding:0.2rem 1.2rem; border-radius:20px; color:white;">📆 Junho</span>
+                        <span style="background:#f59e0b; padding:0.2rem 1.2rem; border-radius:20px; color:white;">📌 Julho</span>
+                    </div>
+                    <div class="legenda-nota">💡 Destaques: ROL DE PROCEDIMENTOS mantém a liderança, mas perde participação (50% → 44%) • PRAZOS MÁXIMOS salta de 16,7% para 21,6% (+107% em volume) • MENSALIDADES entra com 10,4% • REEMBOLSO cai de 6,4% para 2,3% • REDE DE ATENDIMENTO cai de 10,3% para 8,0%.</div>
+                </div>
+
+                <div class="tabela-aux">
+                    <table>
+                        <thead><tr><th>Demanda</th><th>Junho (abs)</th><th>Junho (%)</th><th>Julho (abs)</th><th>Julho (%)</th><th>Variação p.p.</th></tr></thead>
+                        <tbody>
+                            <tr><td style="text-align:left;">📋 ROL DE PROCEDIMENTOS</td><td>39</td><td>50,0%</td><td>55</td><td>43,0%</td><td style="color:#ef4444;">▼ -7,0 p.p.</td></tr>
+                            <tr><td style="text-align:left;">⏳ PRAZOS MÁXIMOS</td><td>13</td><td>16,7%</td><td>27</td><td>21,1%</td><td style="color:#10b981;">▲ +4,4 p.p.</td></tr>
+                            <tr><td style="text-align:left;">📜 REGRAS DE ACESSO</td><td>13</td><td>16,7%</td><td>20</td><td>15,6%</td><td style="color:#ef4444;">▼ -1,1 p.p.</td></tr>
+                            <tr><td style="text-align:left;">💰 MENSALIDADES / COBRANÇAS</td><td>0</td><td>0,0%</td><td>13</td><td>10,2%</td><td style="color:#10b981;">▲ +10,2 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🏥 REDE DE ATENDIMENTO</td><td>8</td><td>10,3%</td><td>10</td><td>7,8%</td><td style="color:#ef4444;">▼ -2,5 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🔄 REEMBOLSO</td><td>5</td><td>6,4%</td><td>3</td><td>2,3%</td><td style="color:#ef4444;">▼ -4,1 p.p.</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="font-size:0.7rem; margin-top:10px; text-align:right; color:#5b6e8c;">
+                        * Junho: 5 demandas (ROL, REGRAS, PRAZOS, REEMBOLSO, REDE) • Julho: TOP5 (ROL, REGRAS, PRAZOS, MENSALIDADES, REDE) + Reembolso (3) para completar a comparação.<br>
+                        * Percentuais calculados sobre o total de cada mês (Junho: 78; Julho: 128, incluindo Reembolso).
+                    </div>
+                </div>
+                <footer><i class="fas fa-database"></i> Fonte: Sistema de NIPs • Base total: Junho = 78 ocorrências | Julho = 128 ocorrências (TOP5 + Reembolso) • Percentuais calculados sobre o total mensal.</footer>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 9 – Objetos Gerais | Julho/2026                           -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab9" role="tabpanel">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <div class="title-section">
+                        <h1><i class="fas fa-boxes" style="color:#2c7a64; margin-right:8px;"></i> Objetos Gerais | Demandas - Julho/2026</h1>
+                        <p>Distribuição dos principais objetos de solicitações (mês de referência)</p>
+                    </div>
+                    <div class="badge-date"><i class="far fa-calendar-alt"></i> Período: Julho de 2026</div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-trophy"></i> Principal objeto</div>
+                        <div class="kpi-value" id="d9_topCategoria">—</div>
+                        <div class="trend-note" id="d9_topValor"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-layer-group"></i> Total geral</div>
+                        <div class="kpi-value" id="d9_totalGeral">—</div>
+                        <div class="trend-note">Soma de todos os objetos</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-chart-simple"></i> Média por objeto</div>
+                        <div class="kpi-value" id="d9_mediaCategoria">—</div>
+                        <div class="trend-note">Distribuição média</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-percent"></i> Objeto dominante</div>
+                        <div class="kpi-value" id="d9_percentualTop">—<span class="kpi-unit">%</span></div>
+                        <div class="trend-note">Participação no total</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#3b82f6;">
+                            <i class="fas fa-chart-bar" style="color:#3b82f6;"></i> Volume por Objeto (horizontal)
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d9_barChartHorizontal" width="500" height="340" style="max-height:340px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-percent"></i> Valores absolutos e percentuais sobre cada barra
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#10b981;">
+                            <i class="fas fa-chart-pie" style="color:#10b981;"></i> Distribuição Percentual
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d9_pieChart" width="400" height="320" style="max-height:320px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-chart-simple"></i> Participação de cada objeto com porcentagens
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3><i class="fas fa-table-list"></i> Detalhamento por Objeto</h3>
+                        <div class="badge-table"><i class="far fa-clock"></i> Ordenado do maior para o menor</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead><tr><th>Objeto</th><th>Quantidade</th><th>Participação (%)</th></tr></thead>
+                            <tbody id="d9_tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="footer-note"><i class="fas fa-chart-pie"></i> Distribuição dos objetos gerais de demandas · Total de ocorrências: <span id="d9_footerTotal"></span></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 10 – Comparativo Objetos (Junho→Julho)                    -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab10" role="tabpanel">
+            <div class="dashboard">
+                <h1><i class="fas fa-boxes" style="color:#2c7a64; margin-right:8px;"></i> Comparativo mensal | Objetos Gerais — Junho → Julho</h1>
+                <div class="subtitulo">Evolução dos principais objetos de solicitações • Mudança no ranking: saem Procedimento e Exame; entram Consulta e Medicamento</div>
+
+                <div class="transition-alert">
+                    <p><i class="fas fa-exchange-alt"></i> <strong>Transição no TOP 5:</strong>
+                        <span class="badge-sai">✖ SAEM Procedimento (9 | 13,4%) e Exame (24 | 35,8%)</span> →
+                        <span class="badge-entra">✔ ENTRAM Consulta (22 | 20,4%) e Medicamento (21 | 19,4%)</span>
+                    </p>
+                    <p style="font-size:0.85rem;">📌 Observação: Em julho, "Exame" cai de 24 para 2 ocorrências, saindo do TOP5. "Procedimento" saiu por completo. Por outro lado, "Consulta" subiu de 6 para 22, e "Medicamento" (antes Medicação) passou de 7 para 21, ambos entrando no TOP5. "Cirurgia" lidera com 24, "Terapia" se mantém com 22.</p>
+                </div>
+
+                <div class="grid-explicativo">
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-arrow-up" style="color:#10b981;"></i> <span class="badge-up">CRESCIMENTO / ENTRADA</span></h3>
+                        <div class="variacao-item"><span>🔬 Cirurgia</span><span class="percent-range">(22,4% → 22,2%)</span></div>
+                        <div class="variacao-item"><span>🩺 Consulta</span><span style="color:#2c7a64;">Entra com 20,4% em julho</span></div>
+                        <div class="variacao-item"><span>💊 Medicamento</span><span style="color:#2c7a64;">Entra com 19,4% em julho</span></div>
+                        <div class="variacao-item"><span>🧠 Terapia</span><span class="percent-range">(11,9% → 20,4%)</span></div>
+                    </div>
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-arrow-down" style="color:#ef4444;"></i> <span class="badge-down">RECUO / SAÍDA</span></h3>
+                        <div class="variacao-item"><span>🔄 Exame</span><span style="color:#ef4444;">Sai do TOP5 (24 → 2)</span></div>
+                        <div class="variacao-item"><span>📋 Procedimento</span><span style="color:#ef4444;">Sai do TOP5 (9 → 0)</span></div>
+                        <div class="variacao-item"><span>💰 Financeiro</span><span style="color:#ef4444;">Cai de 11 → 2</span></div>
+                    </div>
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-chart-simple"></i> VOLUME TOTAL</h3>
+                        <div style="margin-top:10px;">
+                            <div><strong>📆 Junho:</strong> 67 demandas</div>
+                            <div><strong>📌 Julho:</strong> 108 demandas</div>
+                            <hr style="margin:8px 0;">
+                            <div>⬆️ Crescimento de <strong class="destaque-num">+61,2%</strong> no total de ocorrências</div>
+                            <div style="font-size:0.75rem; margin-top:6px;">*Base consolidada TOP5 objetos (absolutos)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grafico-container">
+                    <h3 style="margin-bottom:0.5rem; font-weight:600;"><i class="fas fa-chart-column"></i> Participação percentual de cada objeto no total mensal</h3>
+                    <div class="canvas-wrapper"><canvas id="d10_comparativoChart" width="900" height="400" style="background:#ffffff; border-radius:1rem; padding:8px;"></canvas></div>
+                    <div style="display:flex; justify-content:center; gap:2rem; margin-top:0.8rem; flex-wrap:wrap;">
+                        <span style="background:#3b82f6; padding:0.2rem 1.2rem; border-radius:20px; color:white;">📆 Junho</span>
+                        <span style="background:#f59e0b; padding:0.2rem 1.2rem; border-radius:20px; color:white;">📌 Julho</span>
+                    </div>
+                    <div class="legenda-nota">💡 Destaques: Cirurgia mantém liderança (22,4% → 22,2%) • Terapia sobe de 11,9% para 20,4% • Consulta e Medicamento entram com força • Exame e Procedimento saem do TOP5.</div>
+                </div>
+
+                <div class="tabela-aux">
+                    <table>
+                        <thead><tr><th>Objeto</th><th>Junho (abs)</th><th>Junho (%)</th><th>Julho (abs)</th><th>Julho (%)</th><th>Variação p.p.</th></tr></thead>
+                        <tbody>
+                            <tr><td style="text-align:left;">🔬 Cirurgia</td><td>15</td><td>22,4%</td><td>24</td><td>22,2%</td><td style="color:#ef4444;">▼ -0,2 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🩺 Consulta (Julho)</td><td>0</td><td>0,0%</td><td>22</td><td>20,4%</td><td style="color:#10b981;">▲ +20,4 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🧠 Terapia</td><td>8</td><td>11,9%</td><td>22</td><td>20,4%</td><td style="color:#10b981;">▲ +8,5 p.p.</td></tr>
+                            <tr><td style="text-align:left;">💊 Medicamento (Julho)</td><td>0</td><td>0,0%</td><td>21</td><td>19,4%</td><td style="color:#10b981;">▲ +19,4 p.p.</td></tr>
+                            <tr><td style="text-align:left;">💰 Financeiro</td><td>11</td><td>16,4%</td><td>2</td><td>1,9%</td><td style="color:#ef4444;">▼ -14,5 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🔄 Exame</td><td>24</td><td>35,8%</td><td>2</td><td>1,9%</td><td style="color:#ef4444;">▼ -33,9 p.p.</td></tr>
+                            <tr><td style="text-align:left;">📋 Procedimento (Junho)</td><td>9</td><td>13,4%</td><td>0</td><td>0,0%</td><td style="color:#ef4444;">▼ -13,4 p.p.</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="font-size:0.7rem; margin-top:10px; text-align:right; color:#5b6e8c;">
+                        * Junho: 5 objetos (Cirurgia, Exame, Financeiro, Procedimento, Terapia) • Julho: 5 objetos (Cirurgia, Consulta, Terapia, Medicamento, Financeiro).<br>
+                        * Exame caiu de 24 para 2; Procedimento saiu (9 → 0); Consulta subiu de 6 para 22; Medicamento (antes Medicação) subiu de 7 para 21.
+                    </div>
+                </div>
+                <footer><i class="fas fa-database"></i> Fonte: Sistema de NIPs • Base total: Junho = 67 demandas (TOP5) | Julho = 108 demandas (TOP5) • Percentuais calculados sobre o total mensal.</footer>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 4 – TOP 5 Cidades (Julho/2026)                            -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab4" role="tabpanel">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <div class="title-section">
+                        <h1><i class="fas fa-map-marker-alt" style="color:#2c7a64; margin-right:8px;"></i> TOP 5 Cidades Demandadas | Julho/2026</h1>
+                        <p>Distribuição das principais cidades com solicitações (mês de referência)</p>
+                    </div>
+                    <div class="badge-date"><i class="far fa-calendar-alt"></i> Período: Julho de 2026</div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-trophy"></i> Principal cidade</div>
+                        <div class="kpi-value" id="d4_topCategoria">—</div>
+                        <div class="trend-note" id="d4_topValor"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-layer-group"></i> Total geral</div>
+                        <div class="kpi-value" id="d4_totalGeral">—</div>
+                        <div class="trend-note">Soma de todas as cidades</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-chart-simple"></i> Média por cidade</div>
+                        <div class="kpi-value" id="d4_mediaCategoria">—</div>
+                        <div class="trend-note">Distribuição média</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-percent"></i> Cidade dominante</div>
+                        <div class="kpi-value" id="d4_percentualTop">—<span class="kpi-unit">%</span></div>
+                        <div class="trend-note">Participação no total</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#3b82f6;">
+                            <i class="fas fa-chart-bar" style="color:#3b82f6;"></i> Volume por Cidade (horizontal)
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d4_barChartHorizontal" width="500" height="340" style="max-height:340px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-percent"></i> Valores absolutos e percentuais sobre cada barra
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#10b981;">
+                            <i class="fas fa-chart-pie" style="color:#10b981;"></i> Distribuição Percentual
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d4_pieChart" width="400" height="320" style="max-height:320px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-chart-simple"></i> Participação de cada cidade com porcentagens
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3><i class="fas fa-table-list"></i> Detalhamento por Cidade</h3>
+                        <div class="badge-table"><i class="far fa-clock"></i> TOP 5 cidades - Julho 2026</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead><tr><th>Cidade</th><th>Quantidade</th><th>Participação (%)</th></tr></thead>
+                            <tbody id="d4_tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="footer-note"><i class="fas fa-chart-pie"></i> Distribuição das cidades demandadas · Total de ocorrências: <span id="d4_footerTotal"></span></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 5 – Comparativo Cidades (Junho vs Julho)                  -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab5" role="tabpanel">
+            <div class="dashboard">
+                <h1><i class="fas fa-map-marker-alt" style="color:#2c7a64; margin-right:8px;"></i> Comparativo mensal | Cidades Demandadas — Junho → Julho</h1>
+                <div class="subtitulo">Evolução das cidades mais demandadas • Mudança no ranking: Jataí entra no TOP5, Itumbiara e Brasília perdem posição</div>
+
+                <div class="transition-alert">
+                    <p><i class="fas fa-exchange-alt"></i> <strong>Transição no TOP 5:</strong>
+                        <span class="badge-sai">✖ Itumbiara sai do TOP5 (5 → 4) e Brasília/DF perde posição (9 → 4)</span> →
+                        <span class="badge-entra">✔ ENTRA Jataí com 9 ocorrências</span>
+                    </p>
+                    <p style="font-size:0.85rem;">📌 Observação: Goiânia mantém liderança com forte crescimento (45 → 67). Aparecida de Goiânia sobe de 5 para 11, ocupando a 2ª posição. Anápolis cresce de 6 para 10. Jataí entra com 9. Brasília/DF cai de 9 para 4, e Itumbiara cai de 5 para 4, saindo do TOP5.</p>
+                </div>
+
+                <div class="grid-explicativo">
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-arrow-up" style="color:#10b981;"></i> <span class="badge-up">CRESCIMENTO / ENTRADA</span></h3>
+                        <div class="variacao-item"><span>🏙️ Goiânia</span><span class="percent-range">(64,3% → 63,8%)</span></div>
+                        <div class="variacao-item"><span>🏘️ Aparecida de Goiânia</span><span class="percent-range">(7,1% → 10,5%)</span></div>
+                        <div class="variacao-item"><span>🏢 Anápolis</span><span class="percent-range">(8,6% → 9,5%)</span></div>
+                        <div class="variacao-item"><span>🆕 Jataí</span><span style="color:#2c7a64;">Entra com 8,6% em julho</span></div>
+                    </div>
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-arrow-down" style="color:#ef4444;"></i> <span class="badge-down">RECUO / SAÍDA</span></h3>
+                        <div class="variacao-item"><span>🏙️ Brasília/DF</span><span style="color:#ef4444;">Cai de 12,9% para 3,8%</span></div>
+                        <div class="variacao-item"><span>🏘️ Itumbiara</span><span style="color:#ef4444;">Cai de 7,1% para 3,8%</span></div>
+                    </div>
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-chart-simple"></i> VOLUME TOTAL</h3>
+                        <div style="margin-top:10px;">
+                            <div><strong>📆 Junho:</strong> 70 demandas</div>
+                            <div><strong>📌 Julho:</strong> 105 demandas</div>
+                            <hr style="margin:8px 0;">
+                            <div>⬆️ Alta de <strong class="destaque-num">+50,0%</strong> no total de ocorrências</div>
+                            <div style="font-size:0.75rem; margin-top:6px;">*Base consolidada TOP5/TOP6 cidades (absolutos)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grafico-container">
+                    <h3 style="margin-bottom:0.5rem; font-weight:600;"><i class="fas fa-chart-column"></i> Participação percentual de cada cidade no total mensal</h3>
+                    <div class="canvas-wrapper"><canvas id="d5_comparativoChart" width="900" height="400" style="background:#ffffff; border-radius:1rem; padding:8px;"></canvas></div>
+                    <div style="display:flex; justify-content:center; gap:2rem; margin-top:0.8rem; flex-wrap:wrap;">
+                        <span style="background:#3b82f6; padding:0.2rem 1.2rem; border-radius:20px; color:white;">📆 Junho</span>
+                        <span style="background:#f59e0b; padding:0.2rem 1.2rem; border-radius:20px; color:white;">📌 Julho</span>
+                    </div>
+                    <div class="legenda-nota">💡 Destaques: Goiânia mantém liderança (~64%) • Aparecida de Goiânia sobe de 7,1% para 10,5% • Jataí entra com 8,6% • Brasília/DF e Itumbiara perdem participação significativa.</div>
+                </div>
+
+                <div class="tabela-aux">
+                    <table>
+                        <thead><tr><th>Cidade</th><th>Junho (abs)</th><th>Junho (%)</th><th>Julho (abs)</th><th>Julho (%)</th><th>Variação p.p.</th></tr></thead>
+                        <tbody>
+                            <tr><td style="text-align:left;">🏙️ Goiânia</td><td>45</td><td>64,3%</td><td>67</td><td>63,8%</td><td style="color:#ef4444;">▼ -0,5 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🏘️ Aparecida de Goiânia</td><td>5</td><td>7,1%</td><td>11</td><td>10,5%</td><td style="color:#10b981;">▲ +3,4 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🏢 Anápolis</td><td>6</td><td>8,6%</td><td>10</td><td>9,5%</td><td style="color:#10b981;">▲ +0,9 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🆕 Jataí</td><td>0</td><td>0,0%</td><td>9</td><td>8,6%</td><td style="color:#10b981;">▲ +8,6 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🏙️ Brasília/DF</td><td>9</td><td>12,9%</td><td>4</td><td>3,8%</td><td style="color:#ef4444;">▼ -9,1 p.p.</td></tr>
+                            <tr><td style="text-align:left;">🏘️ Itumbiara</td><td>5</td><td>7,1%</td><td>4</td><td>3,8%</td><td style="color:#ef4444;">▼ -3,3 p.p.</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="font-size:0.7rem; margin-top:10px; text-align:right; color:#5b6e8c;">
+                        * Totais: Junho = 70 (5 cidades) | Julho = 105 (6 cidades).<br>
+                        * Jataí entra com 9 ocorrências; Brasília/DF cai de 9 para 4; Itumbiara cai de 5 para 4.
+                    </div>
+                </div>
+                <footer><i class="fas fa-database"></i> Fonte: Sistema de NIPs • Base total: Junho = 70 demandas | Julho = 105 demandas • Percentuais calculados sobre o total mensal.</footer>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 6 – TOP 5 Demandas por Coordenação (Julho/2026)           -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab6" role="tabpanel">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <div class="title-section">
+                        <h1><i class="fas fa-building" style="color:#2c7a64; margin-right:8px;"></i> TOP 5 Demandas por Coordenação | Julho/2026</h1>
+                        <p>Distribuição das principais coordenações com demandas (quantidade de ocorrências)</p>
+                    </div>
+                    <div class="badge-date"><i class="far fa-calendar-alt"></i> Período: Julho de 2026</div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-trophy"></i> Principal coordenação</div>
+                        <div class="kpi-value" id="d6_topCategoria">—</div>
+                        <div class="trend-note" id="d6_topValor"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-layer-group"></i> Total geral</div>
+                        <div class="kpi-value" id="d6_totalGeral">—</div>
+                        <div class="trend-note">Soma de todas as demandas</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-chart-simple"></i> Média por coordenação</div>
+                        <div class="kpi-value" id="d6_mediaCategoria">—</div>
+                        <div class="trend-note">Distribuição média</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label"><i class="fas fa-percent"></i> Coordenação dominante</div>
+                        <div class="kpi-value" id="d6_percentualTop">—<span class="kpi-unit">%</span></div>
+                        <div class="trend-note">Participação no total</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#3b82f6;">
+                            <i class="fas fa-chart-bar" style="color:#3b82f6;"></i> Volume por Coordenação (horizontal)
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d6_barChartHorizontal" width="500" height="340" style="max-height:340px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-percent"></i> Valores absolutos e percentuais sobre cada barra
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title" style="border-left-color:#10b981;">
+                            <i class="fas fa-chart-pie" style="color:#10b981;"></i> Distribuição Percentual
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="d6_pieChart" width="400" height="320" style="max-height:320px; width:100%"></canvas>
+                        </div>
+                        <div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#5b6e8c;">
+                            <i class="fas fa-chart-simple"></i> Participação de cada coordenação com porcentagens
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3><i class="fas fa-table-list"></i> Detalhamento por Coordenação</h3>
+                        <div class="badge-table"><i class="far fa-clock"></i> TOP 5 coordenações - Julho 2026</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead><tr><th>Coordenação</th><th>Quantidade</th><th>Participação (%)</th></tr></thead>
+                            <tbody id="d6_tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="footer-note"><i class="fas fa-chart-pie"></i> Distribuição das coordenações com demandas · Total de ocorrências: <span id="d6_footerTotal"></span></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ABA 11 – Comparativo Coordenações (Junho vs Julho)            -->
+        <!-- ============================================================ -->
+        <div class="main-panel" id="tab11" role="tabpanel">
+            <div class="dashboard">
+                <h1><i class="fas fa-building" style="color:#2c7a64; margin-right:8px;"></i> Comparativo mensal | Coordenações Demandadas — Junho → Julho</h1>
+                <div class="subtitulo">Evolução das coordenações com mais demandas • Mudança no ranking: saída de COATE e entrada de CODIN</div>
+
+                <div class="transition-alert">
+                    <p><i class="fas fa-exchange-alt"></i> <strong>Transição no TOP 5:</strong>
+                        <span class="badge-sai">✖ SAI COATE (5 | 5,9%)</span> →
+                        <span class="badge-entra">✔ ENTRA CODIN (14 | 10,5%)</span>
+                    </p>
+                    <p style="font-size:0.85rem;">📌 Observação: Em julho, "COATE" deixou o ranking de coordenações mais demandadas, enquanto "CODIN" entrou com 14 ocorrências. "COGAT" teve forte alta (17 → 38), e "COARA" cresceu de 50 para 61.</p>
+                </div>
+
+                <div class="grid-explicativo">
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-arrow-up" style="color:#10b981;"></i> <span class="badge-up">CRESCIMENTO / ENTRADA</span></h3>
+                        <div class="variacao-item"><span>📈 COGAT</span><span class="percent-range">(20,0% → 28,6%)</span></div>
+                        <div class="variacao-item"><span>📈 COARA</span><span class="percent-range">(58,8% → 45,9%)</span></div>
+                        <div class="variacao-item"><span>📈 COFIN</span><span class="percent-range">(8,2% → 9,0%)</span></div>
+                        <div class="variacao-item"><span>🆕 CODIN</span><span style="color:#2c7a64;">Entra com 10,5% em julho</span></div>
+                    </div>
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-arrow-down" style="color:#ef4444;"></i> <span class="badge-down">RECUO / SAÍDA</span></h3>
+                        <div class="variacao-item"><span>📉 CONEG</span><span class="percent-range">(7,1% → 6,0%)</span></div>
+                        <div class="variacao-item"><span>📉 COARA</span><span class="percent-range">(58,8% → 45,9%)</span></div>
+                        <div class="variacao-item"><span>❌ COATE</span><span style="color:#ef4444;">Sai do TOP5 (5 - 4)</span></div>
+                    </div>
+                    <div class="card-explicacao">
+                        <h3><i class="fas fa-chart-simple"></i> VOLUME TOTAL</h3>
+                        <div style="margin-top:10px;">
+                            <div><strong>📆 Junho:</strong> 85 demandas</div>
+                            <div><strong>📌 Julho:</strong> 133 demandas</div>
+                            <hr style="margin:8px 0;">
+                            <div>⬆️ Crescimento de <strong class="destaque-num">+56,5%</strong> no total de ocorrências</div>
+                            <div style="font-size:0.75rem; margin-top:6px;">*Base consolidada TOP5 coordenações (absolutos)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grafico-container">
+                    <h3 style="margin-bottom:0.5rem; font-weight:600;"><i class="fas fa-chart-column"></i> Participação percentual de cada coordenação no total mensal</h3>
+                    <div class="canvas-wrapper"><canvas id="d11_comparativoChart" width="900" height="400" style="background:#ffffff; border-radius:1rem; padding:8px;"></canvas></div>
+                    <div style="display:flex; justify-content:center; gap:2rem; margin-top:0.8rem; flex-wrap:wrap;">
+                        <span style="background:#3b82f6; padding:0.2rem 1.2rem; border-radius:20px; color:white;">📆 Junho</span>
+                        <span style="background:#f59e0b; padding:0.2rem 1.2rem; border-radius:20px; color:white;">📌 Julho</span>
+                    </div>
+                    <div class="legenda-nota">💡 Destaques: COARA mantém liderança (58,8% → 45,9%) • COGAT cresce de 20,0% para 28,6% • CODIN entra com 10,5% • COATE sai do ranking.</div>
+                </div>
+
+                <div class="tabela-aux">
+                    <table>
+                        <thead><tr><th>Coordenação</th><th>Junho (abs)</th><th>Junho (%)</th><th>Julho (abs)</th><th>Julho (%)</th><th>Variação p.p.</th></tr></thead>
+                        <tbody>
+                            <tr><td style="text-align:left;">COARA</td><td>50</td><td>58,8%</td><td>61</td><td>45,9%</td><td style="color:#ef4444;">▼ -12,9 p.p.</td></tr>
+                            <tr><td style="text-align:left;">COGAT</td><td>17</td><td>20,0%</td><td>38</td><td>28,6%</td><td style="color:#10b981;">▲ +8,6 p.p.</td></tr>
+                            <tr><td style="text-align:left;">COFIN</td><td>7</td><td>8,2%</td><td>12</td><td>9,0%</td><td style="color:#10b981;">▲ +0,8 p.p.</td></tr>
+                            <tr><td style="text-align:left;">CONEG</td><td>6</td><td>7,1%</td><td>8</td><td>6,0%</td><td style="color:#ef4444;">▼ -1,1 p.p.</td></tr>
+                            <tr><td style="text-align:left;" class="saiu">COATE (Junho)</td><td>5</td><td>5,9%</td><td>0</td><td>0,0%</td><td style="color:#ef4444;">▼ -5,9 p.p.</td></tr>
+                            <tr><td style="text-align:left;" class="entrou">CODIN (Julho)</td><td>0</td><td>0,0%</td><td>14</td><td>10,5%</td><td style="color:#10b981;">▲ +10,5 p.p.</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="font-size:0.7rem; margin-top:10px; text-align:right; color:#5b6e8c;">
+                        * Junho: 5 coordenações (COARA, COGAT, COFIN, CONEG, COATE) • Julho: 5 coordenações (COARA, CODIN, COFIN, COGAT, CONEG).<br>
+                        * COATE saiu do TOP5; CODIN entrou com 14 ocorrências.
+                    </div>
+                </div>
+
+                <!-- Quadro de descrição dos setores -->
+                <div style="background:#f8fafc; border-radius:28px; padding:1.5rem 2rem; margin-top:2rem; border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+                    <h3 style="font-weight:700; font-size:1.2rem; color:#1e293b; margin-bottom:1.2rem; display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-info-circle" style="color:#2c7a64;"></i> Descrição dos Setores
+                    </h3>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:1rem;">
+                        <div style="background:#ffffff; border-radius:16px; padding:0.8rem 1.2rem; border:1px solid #eef2f6; display:flex; align-items:center; gap:12px;">
+                            <span style="font-weight:800; font-size:1.1rem; color:#1e5a4a; background:#ecfdf5; padding:0.2rem 0.6rem; border-radius:10px; min-width:60px; text-align:center;">COARA</span>
+                            <span style="font-weight:500; color:#334155; font-size:0.9rem;">Coordenação de Autorização e Regulação Administrativa</span>
+                        </div>
+                        <div style="background:#ffffff; border-radius:16px; padding:0.8rem 1.2rem; border:1px solid #eef2f6; display:flex; align-items:center; gap:12px;">
+                            <span style="font-weight:800; font-size:1.1rem; color:#1e5a4a; background:#ecfdf5; padding:0.2rem 0.6rem; border-radius:10px; min-width:60px; text-align:center;">COGAT</span>
+                            <span style="font-weight:500; color:#334155; font-size:0.9rem;">Coordenação de Garantia de Atendimento</span>
+                        </div>
+                        <div style="background:#ffffff; border-radius:16px; padding:0.8rem 1.2rem; border:1px solid #eef2f6; display:flex; align-items:center; gap:12px;">
+                            <span style="font-weight:800; font-size:1.1rem; color:#1e5a4a; background:#ecfdf5; padding:0.2rem 0.6rem; border-radius:10px; min-width:60px; text-align:center;">COATE</span>
+                            <span style="font-weight:500; color:#334155; font-size:0.9rem;">Coordenação de Atenção Domiciliar</span>
+                        </div>
+                        <div style="background:#ffffff; border-radius:16px; padding:0.8rem 1.2rem; border:1px solid #eef2f6; display:flex; align-items:center; gap:12px;">
+                            <span style="font-weight:800; font-size:1.1rem; color:#1e5a4a; background:#ecfdf5; padding:0.2rem 0.6rem; border-radius:10px; min-width:60px; text-align:center;">COFIN</span>
+                            <span style="font-weight:500; color:#334155; font-size:0.9rem;">Coordenação Financeira</span>
+                        </div>
+                        <div style="background:#ffffff; border-radius:16px; padding:0.8rem 1.2rem; border:1px solid #eef2f6; display:flex; align-items:center; gap:12px;">
+                            <span style="font-weight:800; font-size:1.1rem; color:#1e5a4a; background:#ecfdf5; padding:0.2rem 0.6rem; border-radius:10px; min-width:60px; text-align:center;">CONEG</span>
+                            <span style="font-weight:500; color:#334155; font-size:0.9rem;">Coordenação de Negócios</span>
+                        </div>
+                        <div style="background:#ffffff; border-radius:16px; padding:0.8rem 1.2rem; border:1px solid #eef2f6; display:flex; align-items:center; gap:12px;">
+                            <span style="font-weight:800; font-size:1.1rem; color:#1e5a4a; background:#ecfdf5; padding:0.2rem 0.6rem; border-radius:10px; min-width:60px; text-align:center;">CODIN</span>
+                            <span style="font-weight:500; color:#334155; font-size:0.9rem;">Coordenação de Diretrizes e Inovação</span>
+                        </div>
+                    </div>
+                </div>
+
+                <footer><i class="fas fa-database"></i> Fonte: Sistema de NIPs • Base total: Junho = 85 demandas (TOP5) | Julho = 133 demandas (TOP5) • Percentuais calculados sobre o total mensal.</footer>
+            </div>
+        </div>
+
+    </div> <!-- fim main-wrapper -->
+
+    <script>
+        (function() {
+            // ─── REGISTRO DO PLUGIN DATALABELS ───
+            if (typeof Chart !== 'undefined') {
+                Chart.register(ChartDataLabels);
+                Chart.defaults.set('plugins.datalabels', {
+                    color: '#ffffff',
+                    font: { weight: 'bold', size: 12, family: 'Inter' },
+                    padding: { left: 6, right: 6, top: 4, bottom: 4 },
+                    borderRadius: 12,
+                    backgroundColor: 'rgba(0,0,0,0.65)',
+                    borderWidth: 0,
+                });
+                console.log('[Chart] Datalabels registrado com sucesso.');
+            } else {
+                console.warn('[Chart] Chart.js não carregado. Verifique a rede.');
+            }
+
+            // ─── CONTROLE DE ABAS ───
+            const mainTabs = document.querySelectorAll('.main-tab-btn');
+            const mainPanels = document.querySelectorAll('.main-panel');
+
+            function activateMainTab(tabId) {
+                mainPanels.forEach(p => p.classList.remove('active'));
+                mainTabs.forEach(t => t.classList.remove('active'));
+                const panel = document.getElementById(tabId);
+                const btn = document.querySelector(`.main-tab-btn[data-main-tab="${tabId}"]`);
+                if (panel) panel.classList.add('active');
+                if (btn) btn.classList.add('active');
+
+                const initMap = {
+                    'tab1': initD1,
+                    'tab7': initD7,
+                    'tab8': initD8,
+                    'tab2': initD2,
+                    'tab3': initD3,
+                    'tab9': initD9,
+                    'tab10': initD10,
+                    'tab4': initD4,
+                    'tab5': initD5,
+                    'tab6': initD6,
+                    'tab11': initD11
+                };
+                if (initMap[tabId]) {
+                    setTimeout(() => {
+                        initMap[tabId]();
+                        setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+                    }, 80);
+                }
+            }
+
+            mainTabs.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    activateMainTab(this.dataset.mainTab);
+                });
+            });
+
+            // ─── FLAG DE INICIALIZAÇÃO ───
+            const initFlags = {
+                d1: false,
+                d7: false,
+                d8: false,
+                d2: false,
+                d3: false,
+                d9: false,
+                d10: false,
+                d4: false,
+                d5: false,
+                d6: false,
+                d11: false
+            };
+
+            // ─── FUNÇÃO AUXILIAR PARA CRIAR GRÁFICO COM RETRY ───
+            function createChartWithRetry(canvasId, config, maxRetries = 3) {
+                let attempts = 0;
+
+                function tryCreate() {
+                    attempts++;
+                    const canvas = document.getElementById(canvasId);
+                    if (!canvas) {
+                        console.warn(`[Chart] Canvas #${canvasId} não encontrado. Tentativa ${attempts}`);
+                        if (attempts < maxRetries) {
+                            setTimeout(tryCreate, 200);
+                        }
+                        return;
+                    }
+                    const rect = canvas.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) {
+                        console.warn(`[Chart] Canvas #${canvasId} tem dimensão zero. Tentativa ${attempts}`);
+                        if (attempts < maxRetries) {
+                            setTimeout(tryCreate, 200);
+                        }
+                        return;
+                    }
+                    try {
+                        const ctx = canvas.getContext('2d');
+                        const chart = new Chart(ctx, config);
+                        setTimeout(() => chart.resize(), 50);
+                        console.log(`[Chart] Gráfico #${canvasId} criado com sucesso.`);
+                        return chart;
+                    } catch (e) {
+                        console.error(`[Chart] Erro ao criar gráfico #${canvasId}:`, e);
+                        if (attempts < maxRetries) {
+                            setTimeout(tryCreate, 300);
+                        }
+                    }
+                }
+                tryCreate();
+            }
+
+            // ─── DASHBOARD 1 – NIPs por Natureza (Jan a Jul/2026) ──────
+            function initD1() {
+                if (initFlags.d1) return;
+                initFlags.d1 = true;
+                const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho"];
+                const assistencial = [70, 75, 89, 72, 92, 83, 117];
+                const naoAssistencial = [18, 10, 19, 8, 10, 7, 20];
+                const totaisPorMes = assistencial.map((v, i) => v + naoAssistencial[i]);
+                const totalAssistencial = assistencial.reduce((a, b) => a + b, 0);
+                const totalNaoAssistencial = naoAssistencial.reduce((a, b) => a + b, 0);
+                const totalGeral = totalAssistencial + totalNaoAssistencial;
+                const mediaMensal = (totalGeral / 7).toFixed(1);
+                let maxTotal = -Infinity,
+                    mesMax = "";
+                totaisPorMes.forEach((tot, idx) => { if (tot > maxTotal) { maxTotal = tot;
+                        mesMax = meses[idx]; } });
+                const percAssistTotal = ((totalAssistencial / totalGeral) * 100).toFixed(1);
+                document.getElementById('d1_topMes').textContent = mesMax;
+                document.getElementById('d1_topMesValor').textContent = `${maxTotal} NIPs`;
+                document.getElementById('d1_totalGeral').textContent = totalGeral;
+                document.getElementById('d1_mediaMensal').textContent = mediaMensal;
+                document.getElementById('d1_percentualAssist').innerHTML = `${percAssistTotal}<span class="kpi-unit">%</span>`;
+                document.getElementById('d1_footerTotal').textContent = totalGeral;
+                const tbody = document.getElementById('d1_tableBody');
+                tbody.innerHTML = '';
+                for (let i = 0; i < meses.length; i++) {
+                    const total = totaisPorMes[i];
+                    const perc = ((assistencial[i] / total) * 100).toFixed(1);
+                    tbody.insertAdjacentHTML('beforeend',
+                        `<tr><td class="highlight-text">${meses[i]}</td><td>${assistencial[i]}</td><td>${naoAssistencial[i]}</td><td><strong>${total}</strong></td><td>${perc}%</td></tr>`
+                        );
+                }
+                tbody.insertAdjacentHTML('beforeend',
+                    `<tr class="total-row"><td><strong>📊 ACUMULADO (Jan a Jul)</strong></td><td><strong>${totalAssistencial}</strong></td><td><strong>${totalNaoAssistencial}</strong></td><td><strong>${totalGeral}</strong></td><td><strong>${percAssistTotal}%</strong></td></tr>`
+                    );
+                createChartWithRetry('d1_barChartGrouped', {
+                    type: 'bar',
+                    data: {
+                        labels: meses,
+                        datasets: [{
+                            label: 'Assistencial',
+                            data: assistencial,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 8,
+                            barPercentage: 0.65,
+                            categoryPercentage: 0.8,
+                            datalabels: { anchor: 'end', align: 'top', offset: 4, formatter: (v) =>
+                                    v, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 10,
+                                padding: { left: 5, right: 5, top: 3, bottom: 3 }, font: { size: 10,
+                                    weight: 'bold' } }
+                        }, {
+                            label: 'Não Assistencial',
+                            data: naoAssistencial,
+                            backgroundColor: '#f97316',
+                            borderRadius: 8,
+                            barPercentage: 0.65,
+                            categoryPercentage: 0.8,
+                            datalabels: { anchor: 'end', align: 'top', offset: 4, formatter: (v) =>
+                                    v, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 10,
+                                padding: { left: 5, right: 5, top: 3, bottom: 3 }, font: { size: 10,
+                                    weight: 'bold' } }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}`,
+                                    footer: (items) => { const idx = items[0].dataIndex; return `Total do mês: ${totaisPorMes[idx]} NIPs`; } },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8', borderWidth: 1 },
+                            legend: { position: 'top', labels: { color: '#334155', font: { size: 11,
+                                        weight: '500' } } }
+                        },
+                        scales: {
+                            y: { title: { display: true, text: 'Quantidade de NIPs', color: '#4b5563' },
+                                grid: { color: 'rgba(100,116,139,0.12)' }, ticks: { color: '#334155',
+                                    stepSize: 20, precision: 0 }, max: Math.max(...totaisPorMes) + 20 },
+                            x: { title: { display: true, text: 'Mês', color: '#4b5563' }, ticks: { color: '#334155',
+                                    font: { size: 11 } } }
+                        }
+                    }
+                });
+                createChartWithRetry('d1_pieChartTotal', {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Assistencial (total acumulado)', 'Não Assistencial (total acumulado)'],
+                        datasets: [{
+                            data: [totalAssistencial, totalNaoAssistencial],
+                            backgroundColor: ['#3b82f6', '#f97316'],
+                            borderColor: '#ffffff',
+                            borderWidth: 3,
+                            borderRadius: 8,
+                            spacing: 4,
+                            cutout: '55%',
+                            hoverOffset: 12,
+                            datalabels: {
+                                formatter: (v, ctx) => { const p = ((v / totalGeral) * 100).toFixed(
+                                    1); return `${v} (${p}%)`; },
+                                color: '#ffffff',
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                borderRadius: 20,
+                                padding: { left: 8, right: 8, top: 5, bottom: 5 },
+                                font: { weight: 'bold', size: 11 },
+                                anchor: 'center',
+                                align: 'center'
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) => { const val = ctx.raw; const p = ((
+                                        val / totalGeral) * 100).toFixed(1); return `${ctx.label}: ${val} (${p}%)`; } },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8' },
+                            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 12,
+                                    font: { size: 12 }, color: '#334155', padding: 14 } }
+                        }
+                    }
+                });
+            }
+
+            // ─── DASHBOARD 7 – Evolução jul/2025 a jul/2026 ──────────
+            function initD7() {
+                if (initFlags.d7) return;
+                initFlags.d7 = true;
+
+                const meses = [
+                    "jul/2025", "ago/2025", "set/2025", "out/2025",
+                    "nov/2025", "dez/2025", "jan/2026", "fev/2026", "mar/2026",
+                    "abr/2026", "mai/2026", "jun/2026", "jul/2026"
+                ];
+                const valores = [94, 64, 98, 74, 91, 66, 88, 85, 108, 80, 102, 90, 135];
+
+                const totalGeral = valores.reduce((a, b) => a + b, 0);
+                const media = totalGeral / valores.length;
+                const mediana = 88;
+                const maxValor = Math.max(...valores);
+                const minValor = Math.min(...valores);
+                const idxMax = valores.indexOf(maxValor);
+                const idxMin = valores.indexOf(minValor);
+                const mesMax = meses[idxMax];
+                const mesMin = meses[idxMin];
+
+                document.getElementById('d7_maxMes').textContent = mesMax;
+                document.getElementById('d7_maxValor').textContent = `${maxValor} demandas`;
+                document.getElementById('d7_minMes').textContent = mesMin;
+                document.getElementById('d7_minValor').textContent = `${minValor} demandas`;
+                document.getElementById('d7_totalGeral').textContent = totalGeral;
+                document.getElementById('d7_mediana').textContent = mediana;
+                document.getElementById('d7_media').textContent = media.toFixed(1);
+                document.getElementById('d7_footerTotal').textContent = totalGeral;
+
+                const tbody = document.getElementById('d7_tableBody');
+                let html = '';
+                for (let i = 0; i < meses.length; i++) {
+                    let variacao = '';
+                    if (i === 0) {
+                        variacao = '—';
+                    } else {
+                        const diff = ((valores[i] - valores[i - 1]) / valores[i - 1] * 100).toFixed(1);
+                        const sinal = diff >= 0 ? '+' : '';
+                        variacao = `${sinal}${diff}%`;
+                    }
+                    html += `<tr>
+                                <td>${meses[i]}</td>
+                                <td><strong>${valores[i]}</strong></td>
+                                <td>${variacao}</td>
+                            </tr>`;
+                }
+                tbody.innerHTML = html;
+
+                createChartWithRetry('d7_lineChart', {
+                    type: 'line',
+                    data: {
+                        labels: meses,
+                        datasets: [{
+                            label: 'Demandas',
+                            data: valores,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            tension: 0.3,
+                            fill: true,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 4,
+                                formatter: (v) => v,
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                borderRadius: 10,
+                                padding: { left: 5, right: 5, top: 3, bottom: 3 },
+                                font: { size: 10, weight: 'bold' }
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `Quantidade: ${ctx.raw}`,
+                                    title: (items) => items[0].label
+                                },
+                                backgroundColor: '#1e293b',
+                                titleColor: '#f1f5f9',
+                                bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8',
+                                borderWidth: 1
+                            },
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                title: { display: true, text: 'Quantidade de Demandas', color: '#4b5563' },
+                                grid: { color: 'rgba(100,116,139,0.12)' },
+                                ticks: { color: '#334155', stepSize: 20, precision: 0 },
+                                min: 0,
+                                max: Math.max(...valores) + 15
+                            },
+                            x: {
+                                title: { display: true, text: 'Mês', color: '#4b5563' },
+                                ticks: { color: '#334155', font: { size: 10 }, maxRotation: 45, minRotation: 30 }
+                            }
+                        }
+                    },
+                    plugins: [{
+                        id: 'mediaLine',
+                        afterDraw: function(chart) {
+                            const { ctx, chartArea: { top, bottom, left, right }, scales } = chart;
+                            const yScale = scales.y;
+                            const value = media;
+                            const yPixel = yScale.getPixelForValue(value);
+                            if (yPixel < top || yPixel > bottom) return;
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.strokeStyle = 'red';
+                            ctx.lineWidth = 2;
+                            ctx.setLineDash([6, 4]);
+                            ctx.moveTo(left, yPixel);
+                            ctx.lineTo(right, yPixel);
+                            ctx.stroke();
+                            ctx.restore();
+                            ctx.save();
+                            ctx.fillStyle = 'red';
+                            ctx.font = 'bold 12px Inter';
+                            ctx.textAlign = 'right';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText('Média: ' + value.toFixed(1), right - 10, yPixel - 5);
+                            ctx.restore();
+                        }
+                    }]
+                });
+            }
+
+            // ─── DASHBOARD 8 – Evolução out/2024 a jul/2026 ──────────
+            function initD8() {
+                if (initFlags.d8) return;
+                initFlags.d8 = true;
+
+                const meses = [
+                    "out/2024", "nov/2024", "dez/2024", "jan/2025", "fev/2025",
+                    "mar/2025", "abr/2025", "mai/2025", "jun/2025", "jul/2025",
+                    "ago/2025", "set/2025", "out/2025", "nov/2025", "dez/2025",
+                    "jan/2026", "fev/2026", "mar/2026", "abr/2026", "mai/2026",
+                    "jun/2026", "jul/2026"
+                ];
+                const valores = [
+                    11.8, 37, 10.0, 35, 51,
+                    44, 48, 80, 60, 94,
+                    64, 98, 74, 91, 66,
+                    88, 85, 108, 80, 102,
+                    90, 135
+                ];
+
+                const totalGeral = valores.reduce((a, b) => a + b, 0);
+                const media = totalGeral / valores.length;
+                const sorted = [...valores].sort((a, b) => a - b);
+                const mediana = sorted[Math.floor(sorted.length / 2)];
+                const maxValor = Math.max(...valores);
+                const minValor = Math.min(...valores);
+                const idxMax = valores.indexOf(maxValor);
+                const idxMin = valores.indexOf(minValor);
+                const mesMax = meses[idxMax];
+                const mesMin = meses[idxMin];
+
+                document.getElementById('d8_maxMes').textContent = mesMax;
+                document.getElementById('d8_maxValor').textContent = `${maxValor} demandas`;
+                document.getElementById('d8_minMes').textContent = mesMin;
+                document.getElementById('d8_minValor').textContent = `${minValor} demandas`;
+                document.getElementById('d8_totalGeral').textContent = totalGeral;
+                document.getElementById('d8_mediana').textContent = mediana;
+                document.getElementById('d8_media').textContent = media.toFixed(1);
+                document.getElementById('d8_footerTotal').textContent = totalGeral;
+
+                const tbody = document.getElementById('d8_tableBody');
+                let html = '';
+                for (let i = 0; i < meses.length; i++) {
+                    let variacao = '';
+                    if (i === 0) {
+                        variacao = '—';
+                    } else {
+                        const diff = ((valores[i] - valores[i - 1]) / valores[i - 1] * 100).toFixed(1);
+                        const sinal = diff >= 0 ? '+' : '';
+                        variacao = `${sinal}${diff}%`;
+                    }
+                    html += `<tr>
+                                <td>${meses[i]}</td>
+                                <td><strong>${valores[i]}</strong></td>
+                                <td>${variacao}</td>
+                            </tr>`;
+                }
+                tbody.innerHTML = html;
+
+                createChartWithRetry('d8_lineChart', {
+                    type: 'line',
+                    data: {
+                        labels: meses,
+                        datasets: [{
+                            label: 'Demandas',
+                            data: valores,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            tension: 0.3,
+                            fill: true,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 4,
+                                formatter: (v) => v,
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                borderRadius: 10,
+                                padding: { left: 5, right: 5, top: 3, bottom: 3 },
+                                font: { size: 9, weight: 'bold' }
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `Quantidade: ${ctx.raw}`,
+                                    title: (items) => items[0].label
+                                },
+                                backgroundColor: '#1e293b',
+                                titleColor: '#f1f5f9',
+                                bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8',
+                                borderWidth: 1
+                            },
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                title: { display: true, text: 'Quantidade de Demandas', color: '#4b5563' },
+                                grid: { color: 'rgba(100,116,139,0.12)' },
+                                ticks: { color: '#334155', stepSize: 20, precision: 0 },
+                                min: 0,
+                                max: Math.max(...valores) + 15
+                            },
+                            x: {
+                                title: { display: true, text: 'Mês', color: '#4b5563' },
+                                ticks: { color: '#334155', font: { size: 9 }, maxRotation: 60, minRotation: 30 }
+                            }
+                        }
+                    },
+                    plugins: [{
+                        id: 'mediaLine',
+                        afterDraw: function(chart) {
+                            const { ctx, chartArea: { top, bottom, left, right }, scales } = chart;
+                            const yScale = scales.y;
+                            const value = media;
+                            const yPixel = yScale.getPixelForValue(value);
+                            if (yPixel < top || yPixel > bottom) return;
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.strokeStyle = 'red';
+                            ctx.lineWidth = 2;
+                            ctx.setLineDash([6, 4]);
+                            ctx.moveTo(left, yPixel);
+                            ctx.lineTo(right, yPixel);
+                            ctx.stroke();
+                            ctx.restore();
+                            ctx.save();
+                            ctx.fillStyle = 'red';
+                            ctx.font = 'bold 12px Inter';
+                            ctx.textAlign = 'right';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText('Média: ' + value.toFixed(1), right - 10, yPixel - 5);
+                            ctx.restore();
+                        }
+                    }]
+                });
+            }
+
+            // ─── DASHBOARD 2 – TOP 5 Demandas (Julho/2026) ────────────
+            function initD2() {
+                if (initFlags.d2) return;
+                initFlags.d2 = true;
+                const categories = [
+                    { nome: "ROL DE PROCEDIMENTOS", valor: 55 },
+                    { nome: "REGRAS PARA ACESSO AOS ATENDIMENTOS", valor: 20 },
+                    { nome: "PRAZOS MÁXIMOS PARA ATENDIMENTO", valor: 27 },
+                    { nome: "MENSALIDADES OU OUTRAS COBRANÇAS", valor: 13 },
+                    { nome: "REDE DE ATENDIMENTO", valor: 10 }
+                ];
+                const sorted = [...categories].sort((a, b) => b.valor - a.valor);
+                const coresOrdenadas = ['#ef4444', '#f59e0b', '#10b981', '#f97316', '#3b82f6'];
+                const coresMap = {};
+                sorted.forEach((item, idx) => { coresMap[item.nome] = coresOrdenadas[idx]; });
+                const cores = categories.map(c => coresMap[c.nome]);
+                const labels = categories.map(c => {
+                    if (c.nome === "ROL DE PROCEDIMENTOS") return "Rol de Procedimentos";
+                    if (c.nome === "REGRAS PARA ACESSO AOS ATENDIMENTOS") return "Regras de Acesso";
+                    if (c.nome === "PRAZOS MÁXIMOS PARA ATENDIMENTO") return "Prazos Máximos";
+                    if (c.nome === "MENSALIDADES OU OUTRAS COBRANÇAS") return "Mensalidades / Cobranças";
+                    if (c.nome === "REDE DE ATENDIMENTO") return "Rede de Atendimento";
+                    return c.nome;
+                });
+                const valores = categories.map(c => c.valor);
+                const totalGeral = valores.reduce((a, b) => a + b, 0);
+                const media = (totalGeral / categories.length).toFixed(1);
+                const maior = sorted[0];
+                const maxValor = maior.valor;
+                let maxNomeExib = maior.nome;
+                if (maxNomeExib === "ROL DE PROCEDIMENTOS") maxNomeExib = "Rol de Procedimentos";
+                else if (maxNomeExib === "REGRAS PARA ACESSO AOS ATENDIMENTOS") maxNomeExib = "Regras de Acesso";
+                else if (maxNomeExib === "PRAZOS MÁXIMOS PARA ATENDIMENTO") maxNomeExib = "Prazos Máximos";
+                else if (maxNomeExib === "MENSALIDADES OU OUTRAS COBRANÇAS") maxNomeExib = "Mensalidades / Cobranças";
+                else if (maxNomeExib === "REDE DE ATENDIMENTO") maxNomeExib = "Rede de Atendimento";
+                const percentualTop = ((maxValor / totalGeral) * 100).toFixed(1);
+                document.getElementById('d2_topCategoria').innerHTML = maxNomeExib;
+                document.getElementById('d2_topValor').innerHTML = `${maxValor} demandas`;
+                document.getElementById('d2_totalGeral').innerHTML = totalGeral;
+                document.getElementById('d2_mediaCategoria').innerHTML = media;
+                document.getElementById('d2_percentualTop').innerHTML = percentualTop;
+                document.getElementById('d2_footerTotal').innerHTML = totalGeral;
+                const tbody = document.getElementById('d2_tableBody');
+                tbody.innerHTML = '';
+                categories.forEach(cat => {
+                    const perc = ((cat.valor / totalGeral) * 100).toFixed(1);
+                    tbody.insertAdjacentHTML('beforeend',
+                        `<tr><td class="highlight-text">${cat.nome}</td><td>${cat.valor}</td><td>${perc}%</td></tr>`
+                        );
+                });
+                tbody.insertAdjacentHTML('beforeend',
+                    `<tr class="total-row"><td><strong>📊 TOTAL</strong></td><td><strong>${totalGeral}</strong></td><td><strong>100%</strong></td></tr>`
+                    );
+                const percentuais = valores.map(v => ((v / totalGeral) * 100).toFixed(1));
+                createChartWithRetry('d2_barChartHorizontal', {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Quantidade de Demandas',
+                            data: valores,
+                            backgroundColor: cores,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'right',
+                                offset: 4,
+                                formatter: (v, ctx) => { const perc = percentuais[ctx.dataIndex]; return `${v} (${perc}%)`; },
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                borderRadius: 12,
+                                padding: { left: 8, right: 8, top: 4, bottom: 4 },
+                                font: { weight: 'bold', size: 11 }
+                            }
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        layout: { padding: { right: 20 } },
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) =>
+                                    `Quantidade: ${ctx.raw} (${percentuais[ctx.dataIndex]}%)`,
+                                    title: (items) => categories[items[0].dataIndex].nome },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8' },
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Quantidade', color: '#4b5563' },
+                                grid: { color: 'rgba(100,116,139,0.1)' }, ticks: { color: '#334155',
+                                    stepSize: 5, precision: 0 }, max: Math.max(...valores) + 5 },
+                            y: { title: { display: true, text: 'Demandas', color: '#4b5563' },
+                            ticks: { color: '#334155', font: { size: 11 } } }
+                        }
+                    }
+                });
+                createChartWithRetry('d2_pieChart', {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: valores,
+                            backgroundColor: cores,
+                            borderColor: '#ffffff',
+                            borderWidth: 3,
+                            borderRadius: 6,
+                            spacing: 2,
+                            cutout: '55%',
+                            hoverOffset: 12,
+                            datalabels: {
+                                formatter: (v, ctx) => { const perc = percentuais[ctx.dataIndex]; return `${perc}%`; },
+                                color: '#ffffff',
+                                backgroundColor: 'rgba(0,0,0,0.65)',
+                                borderRadius: 20,
+                                padding: { left: 8, right: 8, top: 5, bottom: 5 },
+                                font: { weight: 'bold', size: 11 },
+                                anchor: 'center',
+                                align: 'center'
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) => { const label = ctx.label || '';
+                                    const val = ctx.raw; const perc = percentuais[ctx.dataIndex]; return `${label}: ${val} (${perc}%)`; } },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8' },
+                            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10,
+                                    font: { size: 10 }, color: '#334155', padding: 12 } }
+                        }
+                    }
+                });
+            }
+
+            // ─── DASHBOARD 3 ──────────────────────────────────────────────
+            function initD3() {
+                if (initFlags.d3) return;
+                initFlags.d3 = true;
+                const categorias = ["Rol de Procedimentos", "Regras de Acesso", "Prazos Máximos",
+                    "Rede de Atendimento", "Mensalidades (jul) / Reembolso (jun)"
+                ];
+                const junhoPercent = [50.0, 16.7, 16.7, 10.3, 6.4];
+                const julhoPercent = [43.0, 15.6, 21.1, 7.8, 10.2];
+                createChartWithRetry('d3_comparativoChart', {
+                    type: 'bar',
+                    data: {
+                        labels: categorias,
+                        datasets: [{
+                            label: 'Junho (%)',
+                            data: junhoPercent,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 8,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: { anchor: 'end', align: 'top', offset: 6,
+                                formatter: (v) => v.toFixed(1) + '%', backgroundColor: '#1e40af' }
+                        }, {
+                            label: 'Julho (%)',
+                            data: julhoPercent,
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 8,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: { anchor: 'end', align: 'top', offset: 6,
+                                formatter: (v) => v.toFixed(1) + '%', backgroundColor: '#b45309' }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) => { let label = ctx.dataset.label ||
+                                        ''; let valor = ctx.raw; return `${label}: ${valor.toFixed(1)}%`; } },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8', borderWidth: 1 },
+                            legend: { position: 'top', labels: { color: '#334155', font: { size: 12,
+                                        weight: 'bold' } } }
+                        },
+                        scales: {
+                            y: { title: { display: true,
+                                    text: 'Percentual sobre total de demandas (%)', color: '#4b5563',
+                                    font: { weight: 'bold' } }, grid: { color: '#e2e8f0' },
+                                ticks: { color: '#334155', stepSize: 10, callback: (val) => val + '%' },
+                                max: 60, min: 0 },
+                            x: { ticks: { color: '#334155', font: { size: 10, weight: '500' },
+                                    maxRotation: 15, minRotation: 10 }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // ─── DASHBOARD 9 – Objetos Gerais | Julho/2026 ─────────────
+            function initD9() {
+                if (initFlags.d9) return;
+                initFlags.d9 = true;
+
+                const rawData = [
+                    { nome: "CIRURGIA", valor: 24 },
+                    { nome: "CONSULTA", valor: 22 },
+                    { nome: "TERAPIA", valor: 22 },
+                    { nome: "FINANCEIRO", valor: 21 },
+                    { nome: "MEDICAMENTO", valor: 21 }
+                ];
+
+                const sortedDesc = [...rawData].sort((a, b) => b.valor - a.valor);
+                const coresOrdenadas = ['#10b981', '#f59e0b', '#ef4444', '#f97316', '#3b82f6'];
+                const coresMap = {};
+                sortedDesc.forEach((item, idx) => { coresMap[item.nome] = coresOrdenadas[idx]; });
+
+                const labelsDesc = sortedDesc.map(c => c.nome.charAt(0).toUpperCase() + c.nome.slice(1).toLowerCase());
+                const valoresDesc = sortedDesc.map(c => c.valor);
+                const coresDesc = sortedDesc.map(c => coresMap[c.nome]);
+
+                const totalGeral = valoresDesc.reduce((a, b) => a + b, 0);
+                const media = (totalGeral / rawData.length).toFixed(1);
+                const maior = sortedDesc[0];
+                const maxValor = maior.valor;
+                const maxNome = maior.nome;
+                let maxNomeExib = maxNome.charAt(0).toUpperCase() + maxNome.slice(1).toLowerCase();
+                const percentualTop = ((maxValor / totalGeral) * 100).toFixed(1);
+
+                document.getElementById('d9_topCategoria').innerHTML = maxNomeExib;
+                document.getElementById('d9_topValor').innerHTML = `${maxValor} demandas`;
+                document.getElementById('d9_totalGeral').innerHTML = totalGeral;
+                document.getElementById('d9_mediaCategoria').innerHTML = media;
+                document.getElementById('d9_percentualTop').innerHTML = percentualTop;
+                document.getElementById('d9_footerTotal').innerHTML = totalGeral;
+
+                const tableBody = document.getElementById('d9_tableBody');
+                tableBody.innerHTML = '';
+                sortedDesc.forEach(cat => {
+                    const perc = ((cat.valor / totalGeral) * 100).toFixed(1);
+                    const row =
+                        `<tr><td class="highlight-text">${cat.nome}</td><td>${cat.valor}</td><td>${perc}%</td></tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+                tableBody.insertAdjacentHTML('beforeend',
+                    `<tr class="total-row"><td><strong>📊 TOTAL</strong></td><td><strong>${totalGeral}</strong></td><td><strong>100%</strong></td></tr>`
+                    );
+
+                const percentuaisDesc = valoresDesc.map(v => ((v / totalGeral) * 100).toFixed(1));
+
+                createChartWithRetry('d9_barChartHorizontal', {
+                    type: 'bar',
+                    data: {
+                        labels: labelsDesc,
+                        datasets: [{
+                            label: 'Quantidade de Demandas',
+                            data: valoresDesc,
+                            backgroundColor: coresDesc,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'right',
+                                offset: 4,
+                                formatter: (v, ctx) => {
+                                    const perc = percentuaisDesc[ctx.dataIndex];
+                                    return `${v} (${perc}%)`;
+                                },
+                                backgroundColor: 'rgba(0,0,0,0.75)',
+                                borderRadius: 12,
+                                padding: { left: 10, right: 10, top: 5, bottom: 5 },
+                                font: { weight: 'bold', size: 11 }
+                            }
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        layout: { padding: { right: 60 } },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) =>
+                                        `Quantidade: ${ctx.raw} (${percentuaisDesc[ctx.dataIndex]}%)`,
+                                    title: (items) => sortedDesc[items[0].dataIndex].nome
+                                },
+                                backgroundColor: '#1e293b',
+                                titleColor: '#f1f5f9',
+                                bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8'
+                            },
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Quantidade', color: '#4b5563' },
+                                grid: { color: 'rgba(100,116,139,0.1)' },
+                                ticks: { color: '#334155', stepSize: 5, precision: 0 },
+                                max: Math.max(...valoresDesc) + 10
+                            },
+                            y: {
+                                title: { display: true, text: 'Objetos', color: '#4b5563' },
+                                ticks: { color: '#334155', font: { size: 11 } }
+                            }
+                        }
+                    }
+                });
+
+                createChartWithRetry('d9_pieChart', {
+                    type: 'doughnut',
+                    data: {
+                        labels: labelsDesc,
+                        datasets: [{
+                            data: valoresDesc,
+                            backgroundColor: coresDesc,
+                            borderColor: '#ffffff',
+                            borderWidth: 3,
+                            borderRadius: 6,
+                            spacing: 2,
+                            cutout: '55%',
+                            hoverOffset: 12,
+                            datalabels: {
+                                formatter: (v, ctx) => {
+                                    const perc = percentuaisDesc[ctx.dataIndex];
+                                    return `${perc}%`;
+                                },
+                                color: '#ffffff',
+                                backgroundColor: 'rgba(0,0,0,0.65)',
+                                borderRadius: 20,
+                                padding: { left: 8, right: 8, top: 5, bottom: 5 },
+                                font: { weight: 'bold', size: 11 },
+                                anchor: 'center',
+                                align: 'center'
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => {
+                                        const label = ctx.label || '';
+                                        const val = ctx.raw;
+                                        const perc = percentuaisDesc[ctx.dataIndex];
+                                        return `${label}: ${val} (${perc}%)`;
+                                    }
+                                },
+                                backgroundColor: '#1e293b',
+                                titleColor: '#f1f5f9',
+                                bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8'
+                            },
+                            legend: {
+                                position: 'bottom',
+                                labels: { usePointStyle: true, boxWidth: 10, font: { size: 10 },
+                                    color: '#334155', padding: 12 }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ─── DASHBOARD 10 – Comparativo Objetos Junho→Julho ──────────
+            function initD10() {
+                if (initFlags.d10) return;
+                initFlags.d10 = true;
+
+                const junhoData = [
+                    { nome: "CIRURGIA", valor: 15 },
+                    { nome: "EXAME", valor: 24 },
+                    { nome: "FINANCEIRO", valor: 11 },
+                    { nome: "PROCEDIMENTO", valor: 9 },
+                    { nome: "TERAPIA", valor: 8 }
+                ];
+                const totalJunho = junhoData.reduce((s, i) => s + i.valor, 0);
+
+                const julhoData = [
+                    { nome: "CIRURGIA", valor: 24 },
+                    { nome: "CONSULTA", valor: 22 },
+                    { nome: "TERAPIA", valor: 22 },
+                    { nome: "FINANCEIRO", valor: 21 },
+                    { nome: "MEDICAMENTO", valor: 21 }
+                ];
+                const totalJulho = julhoData.reduce((s, i) => s + i.valor, 0);
+
+                const categorias = [
+                    "Cirurgia", "Exame", "Consulta", "Terapia", "Medicamento",
+                    "Financeiro", "Procedimento"
+                ];
+
+                const junhoMap = {};
+                junhoData.forEach(item => { junhoMap[item.nome] = item.valor; });
+                const julhoMap = {};
+                julhoData.forEach(item => { julhoMap[item.nome] = item.valor; });
+
+                const junhoValores = categorias.map(cat => {
+                    let chave = cat;
+                    if (chave === "Cirurgia") chave = "CIRURGIA";
+                    else if (chave === "Exame") chave = "EXAME";
+                    else if (chave === "Consulta") chave = "CONSULTA";
+                    else if (chave === "Terapia") chave = "TERAPIA";
+                    else if (chave === "Medicamento") chave = "MEDICAMENTO";
+                    else if (chave === "Financeiro") chave = "FINANCEIRO";
+                    else if (chave === "Procedimento") chave = "PROCEDIMENTO";
+                    return junhoMap[chave] || 0;
+                });
+
+                const julhoValores = categorias.map(cat => {
+                    let chave = cat;
+                    if (chave === "Cirurgia") chave = "CIRURGIA";
+                    else if (chave === "Exame") chave = "EXAME";
+                    else if (chave === "Consulta") chave = "CONSULTA";
+                    else if (chave === "Terapia") chave = "TERAPIA";
+                    else if (chave === "Medicamento") chave = "MEDICAMENTO";
+                    else if (chave === "Financeiro") chave = "FINANCEIRO";
+                    else if (chave === "Procedimento") chave = "PROCEDIMENTO";
+                    return julhoMap[chave] || 0;
+                });
+
+                const junhoPercent = junhoValores.map(v => (v / totalJunho) * 100);
+                const julhoPercent = julhoValores.map(v => (v / totalJulho) * 100);
+
+                createChartWithRetry('d10_comparativoChart', {
+                    type: 'bar',
+                    data: {
+                        labels: categorias,
+                        datasets: [{
+                            label: 'Junho (%)',
+                            data: junhoPercent,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 8,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 6,
+                                formatter: (v) => v.toFixed(1) + '%',
+                                backgroundColor: '#1e40af'
+                            }
+                        }, {
+                            label: 'Julho (%)',
+                            data: julhoPercent,
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 8,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 6,
+                                formatter: (v) => v.toFixed(1) + '%',
+                                backgroundColor: '#b45309'
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => {
+                                        let label = ctx.dataset.label || '';
+                                        let valor = ctx.raw;
+                                        return `${label}: ${valor.toFixed(1)}%`;
+                                    }
+                                },
+                                backgroundColor: '#1e293b',
+                                titleColor: '#f1f5f9',
+                                bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8',
+                                borderWidth: 1
+                            },
+                            legend: {
+                                position: 'top',
+                                labels: { color: '#334155', font: { size: 12, weight: 'bold' } }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Percentual sobre total de demandas (%)',
+                                    color: '#4b5563',
+                                    font: { weight: 'bold' }
+                                },
+                                grid: { color: '#e2e8f0' },
+                                ticks: { color: '#334155', stepSize: 10, callback: (val) => val + '%' },
+                                max: 45,
+                                min: 0
+                            },
+                            x: {
+                                ticks: { color: '#334155', font: { size: 10, weight: '500' },
+                                    maxRotation: 15, minRotation: 10 },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ─── DASHBOARD 4 ──────────────────────────────────────────────
+            function initD4() {
+                if (initFlags.d4) return;
+                initFlags.d4 = true;
+                const rawData = [
+                    { nome: "Goiânia/GO", valor: 67 },
+                    { nome: "Aparecida de Goiânia/GO", valor: 11 },
+                    { nome: "Anápolis/GO", valor: 10 },
+                    { nome: "Jataí/GO", valor: 9 },
+                    { nome: "Brasília/DF", valor: 4 }
+                ];
+                const sorted = [...rawData].sort((a, b) => b.valor - a.valor);
+                const coresOrdenadas = ['#10b981', '#f59e0b', '#ef4444', '#f97316', '#3b82f6'];
+                const coresMap = {};
+                sorted.forEach((item, idx) => { coresMap[item.nome] = coresOrdenadas[idx]; });
+                const cores = rawData.map(c => coresMap[c.nome]);
+                const labels = rawData.map(c => c.nome);
+                const valores = rawData.map(c => c.valor);
+                const totalGeral = valores.reduce((a, b) => a + b, 0);
+                const media = (totalGeral / rawData.length).toFixed(1);
+                const maior = sorted[0];
+                const maxValor = maior.valor;
+                const maxNome = maior.nome;
+                const percentualTop = ((maxValor / totalGeral) * 100).toFixed(1);
+                document.getElementById('d4_topCategoria').innerHTML = maxNome;
+                document.getElementById('d4_topValor').innerHTML = `${maxValor} demandas`;
+                document.getElementById('d4_totalGeral').innerHTML = totalGeral;
+                document.getElementById('d4_mediaCategoria').innerHTML = media;
+                document.getElementById('d4_percentualTop').innerHTML = percentualTop;
+                document.getElementById('d4_footerTotal').innerHTML = totalGeral;
+                const tbody = document.getElementById('d4_tableBody');
+                tbody.innerHTML = '';
+                sorted.forEach(cat => {
+                    const perc = ((cat.valor / totalGeral) * 100).toFixed(1);
+                    tbody.insertAdjacentHTML('beforeend',
+                        `<tr><td class="highlight-text">${cat.nome}</td><td>${cat.valor}</td><td>${perc}%</td></tr>`
+                        );
+                });
+                tbody.insertAdjacentHTML('beforeend',
+                    `<tr class="total-row"><td><strong>📊 TOTAL</strong></td><td><strong>${totalGeral}</strong></td><td><strong>100%</strong></td></tr>`
+                    );
+                const percentuais = valores.map(v => ((v / totalGeral) * 100).toFixed(1));
+                const maxValorTotal = Math.max(...valores);
+                createChartWithRetry('d4_barChartHorizontal', {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Quantidade de Demandas',
+                            data: valores,
+                            backgroundColor: cores,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'right',
+                                offset: 4,
+                                formatter: (v, ctx) => { const perc = percentuais[ctx.dataIndex]; return `${v} (${perc}%)`; },
+                                backgroundColor: 'rgba(0,0,0,0.75)',
+                                borderRadius: 12,
+                                padding: { left: 10, right: 10, top: 5, bottom: 5 },
+                                font: { weight: 'bold', size: 11 }
+                            }
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        layout: { padding: { right: 60 } },
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) =>
+                                    `Quantidade: ${ctx.raw} (${percentuais[ctx.dataIndex]}%)`,
+                                    title: (items) => rawData[items[0].dataIndex].nome },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8' },
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Quantidade', color: '#4b5563' },
+                                grid: { color: 'rgba(100,116,139,0.1)' }, ticks: { color: '#334155',
+                                    stepSize: 5, precision: 0 }, max: maxValorTotal + 12 },
+                            y: { title: { display: true, text: 'Cidades', color: '#4b5563' },
+                            ticks: { color: '#334155', font: { size: 11 } } }
+                        }
+                    }
+                });
+                createChartWithRetry('d4_pieChart', {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: valores,
+                            backgroundColor: cores,
+                            borderColor: '#ffffff',
+                            borderWidth: 3,
+                            borderRadius: 6,
+                            spacing: 2,
+                            cutout: '55%',
+                            hoverOffset: 12,
+                            datalabels: {
+                                formatter: (v, ctx) => { const perc = percentuais[ctx.dataIndex]; return `${perc}%`; },
+                                color: '#ffffff',
+                                backgroundColor: 'rgba(0,0,0,0.65)',
+                                borderRadius: 20,
+                                padding: { left: 8, right: 8, top: 5, bottom: 5 },
+                                font: { weight: 'bold', size: 11 },
+                                anchor: 'center',
+                                align: 'center'
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) => { const label = ctx.label || '';
+                                    const val = ctx.raw; const perc = percentuais[ctx.dataIndex]; return `${label}: ${val} (${perc}%)`; } },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8' },
+                            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10,
+                                    font: { size: 10 }, color: '#334155', padding: 12 } }
+                        }
+                    }
+                });
+            }
+
+            // ─── DASHBOARD 5 ──────────────────────────────────────────────
+            function initD5() {
+                if (initFlags.d5) return;
+                initFlags.d5 = true;
+                const maioData = [
+                    { nome: "GOIÂNIA", valor: 64 },
+                    { nome: "ANÁPOLIS", valor: 8 },
+                    { nome: "APARECIDA DE GOIÂNIA", valor: 7 },
+                    { nome: "ITUMBIARA", valor: 4 }
+                ];
+                const junhoData = [
+                    { nome: "GOIÂNIA", valor: 45 },
+                    { nome: "BRASÍLIA", valor: 9 },
+                    { nome: "ANÁPOLIS", valor: 6 },
+                    { nome: "APARECIDA DE GOIÂNIA", valor: 5 },
+                    { nome: "ITUMBIARA", valor: 5 }
+                ];
+                const totalMaio = maioData.reduce((s, i) => s + i.valor, 0);
+                const totalJunho = junhoData.reduce((s, i) => s + i.valor, 0);
+                const categorias = ["Goiânia", "Brasília/DF", "Anápolis", "Aparecida de Goiânia", "Itumbiara"];
+                const maioMap = {};
+                maioData.forEach(item => { maioMap[item.nome] = item.valor; });
+                const junhoMap = {};
+                junhoData.forEach(item => { junhoMap[item.nome] = item.valor; });
+                const maioValores = categorias.map(cat => {
+                    let chave = cat;
+                    if (chave === "Goiânia") chave = "GOIÂNIA";
+                    else if (chave === "Brasília/DF") chave = "BRASÍLIA";
+                    else if (chave === "Anápolis") chave = "ANÁPOLIS";
+                    else if (chave === "Aparecida de Goiânia") chave = "APARECIDA DE GOIÂNIA";
+                    else if (chave === "Itumbiara") chave = "ITUMBIARA";
+                    return maioMap[chave] || 0;
+                });
+                const junhoValores = categorias.map(cat => {
+                    let chave = cat;
+                    if (chave === "Goiânia") chave = "GOIÂNIA";
+                    else if (chave === "Brasília/DF") chave = "BRASÍLIA";
+                    else if (chave === "Anápolis") chave = "ANÁPOLIS";
+                    else if (chave === "Aparecida de Goiânia") chave = "APARECIDA DE GOIÂNIA";
+                    else if (chave === "Itumbiara") chave = "ITUMBIARA";
+                    return junhoMap[chave] || 0;
+                });
+                const maioPercent = maioValores.map(v => (v / totalMaio) * 100);
+                const junhoPercent = junhoValores.map(v => (v / totalJunho) * 100);
+                createChartWithRetry('d5_comparativoChart', {
+                    type: 'bar',
+                    data: {
+                        labels: categorias,
+                        datasets: [{
+                            label: 'Maio (%)',
+                            data: maioPercent,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 8,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: { anchor: 'end', align: 'top', offset: 6,
+                                formatter: (v) => v.toFixed(1) + '%', backgroundColor: '#1e40af' }
+                        }, {
+                            label: 'Junho (%)',
+                            data: junhoPercent,
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 8,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: { anchor: 'end', align: 'top', offset: 6,
+                                formatter: (v) => v.toFixed(1) + '%', backgroundColor: '#b45309' }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) => { let label = ctx.dataset.label ||
+                                        ''; let valor = ctx.raw; return `${label}: ${valor.toFixed(1)}%`; } },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8', borderWidth: 1 },
+                            legend: { position: 'top', labels: { color: '#334155', font: { size: 12,
+                                        weight: 'bold' } } }
+                        },
+                        scales: {
+                            y: { title: { display: true,
+                                    text: 'Percentual sobre total de demandas (%)', color: '#4b5563',
+                                    font: { weight: 'bold' } }, grid: { color: '#e2e8f0' },
+                                ticks: { color: '#334155', stepSize: 10, callback: (val) => val + '%' },
+                                max: 85, min: 0 },
+                            x: { ticks: { color: '#334155', font: { size: 10, weight: '500' },
+                                    maxRotation: 15, minRotation: 10 }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // ─── DASHBOARD 6 ──────────────────────────────────────────────
+            function initD6() {
+                if (initFlags.d6) return;
+                initFlags.d6 = true;
+                const rawData = [
+                    { nome: "COARA", valor: 61 },
+                    { nome: "CODIN", valor: 14 },
+                    { nome: "COFIN", valor: 12 },
+                    { nome: "COGAT", valor: 38 },
+                    { nome: "CONEG", valor: 8 }
+                ];
+                // ordenar decrescente
+                const sorted = [...rawData].sort((a, b) => b.valor - a.valor);
+                const coresOrdenadas = ['#10b981', '#f59e0b', '#ef4444', '#f97316', '#3b82f6'];
+                const coresMap = {};
+                sorted.forEach((item, idx) => { coresMap[item.nome] = coresOrdenadas[idx]; });
+                // manter a ordem original para os gráficos (exibição)
+                const labels = rawData.map(c => c.nome);
+                const valores = rawData.map(c => c.valor);
+                const cores = rawData.map(c => coresMap[c.nome]);
+                const totalGeral = valores.reduce((a, b) => a + b, 0);
+                const media = (totalGeral / rawData.length).toFixed(1);
+                const maior = sorted[0];
+                const maxValor = maior.valor;
+                const maxNome = maior.nome;
+                const percentualTop = ((maxValor / totalGeral) * 100).toFixed(1);
+                document.getElementById('d6_topCategoria').innerHTML = maxNome;
+                document.getElementById('d6_topValor').innerHTML = `${maxValor} demandas`;
+                document.getElementById('d6_totalGeral').innerHTML = totalGeral;
+                document.getElementById('d6_mediaCategoria').innerHTML = media;
+                document.getElementById('d6_percentualTop').innerHTML = percentualTop;
+                document.getElementById('d6_footerTotal').innerHTML = totalGeral;
+                const tbody = document.getElementById('d6_tableBody');
+                tbody.innerHTML = '';
+                sorted.forEach(cat => {
+                    const perc = ((cat.valor / totalGeral) * 100).toFixed(1);
+                    tbody.insertAdjacentHTML('beforeend',
+                        `<tr><td class="highlight-text">${cat.nome}</td><td>${cat.valor}</td><td>${perc}%</td></tr>`
+                        );
+                });
+                tbody.insertAdjacentHTML('beforeend',
+                    `<tr class="total-row"><td><strong>📊 TOTAL</strong></td><td><strong>${totalGeral}</strong></td><td><strong>100%</strong></td></tr>`
+                    );
+                const percentuais = valores.map(v => ((v / totalGeral) * 100).toFixed(1));
+                const maxValorTotal = Math.max(...valores);
+                createChartWithRetry('d6_barChartHorizontal', {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Quantidade de Demandas',
+                            data: valores,
+                            backgroundColor: cores,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'right',
+                                offset: 4,
+                                formatter: (v, ctx) => { const perc = percentuais[ctx.dataIndex]; return `${v} (${perc}%)`; },
+                                backgroundColor: 'rgba(0,0,0,0.75)',
+                                borderRadius: 12,
+                                padding: { left: 10, right: 10, top: 5, bottom: 5 },
+                                font: { weight: 'bold', size: 11 }
+                            }
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        layout: { padding: { right: 70 } },
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) =>
+                                    `Quantidade: ${ctx.raw} (${percentuais[ctx.dataIndex]}%)`,
+                                    title: (items) => rawData[items[0].dataIndex].nome },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8' },
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Quantidade', color: '#4b5563' },
+                                grid: { color: 'rgba(100,116,139,0.1)' }, ticks: { color: '#334155',
+                                    stepSize: 5, precision: 0 }, max: maxValorTotal + 15 },
+                            y: { title: { display: true, text: 'Coordenações', color: '#4b5563' },
+                            ticks: { color: '#334155', font: { size: 11 } } }
+                        }
+                    }
+                });
+                createChartWithRetry('d6_pieChart', {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: valores,
+                            backgroundColor: cores,
+                            borderColor: '#ffffff',
+                            borderWidth: 3,
+                            borderRadius: 6,
+                            spacing: 2,
+                            cutout: '55%',
+                            hoverOffset: 12,
+                            datalabels: {
+                                formatter: (v, ctx) => { const perc = percentuais[ctx.dataIndex]; return `${perc}%`; },
+                                color: '#ffffff',
+                                backgroundColor: 'rgba(0,0,0,0.65)',
+                                borderRadius: 20,
+                                padding: { left: 8, right: 8, top: 5, bottom: 5 },
+                                font: { weight: 'bold', size: 11 },
+                                anchor: 'center',
+                                align: 'center'
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: { callbacks: { label: (ctx) => { const label = ctx.label || '';
+                                    const val = ctx.raw; const perc = percentuais[ctx.dataIndex]; return `${label}: ${val} (${perc}%)`; } },
+                                backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8' },
+                            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10,
+                                    font: { size: 10 }, color: '#334155', padding: 12 } }
+                        }
+                    }
+                });
+            }
+
+            // ─── DASHBOARD 11 – Comparativo Coordenações ─────────────────
+            function initD11() {
+                if (initFlags.d11) return;
+                initFlags.d11 = true;
+
+                const junhoData = [
+                    { nome: "COARA", valor: 50 },
+                    { nome: "COGAT", valor: 17 },
+                    { nome: "COFIN", valor: 7 },
+                    { nome: "CONEG", valor: 6 },
+                    { nome: "COATE", valor: 5 }
+                ];
+                const totalJunho = junhoData.reduce((s, i) => s + i.valor, 0);
+
+                const julhoData = [
+                    { nome: "COARA", valor: 61 },
+                    { nome: "CODIN", valor: 14 },
+                    { nome: "COFIN", valor: 12 },
+                    { nome: "COGAT", valor: 38 },
+                    { nome: "CONEG", valor: 8 }
+                ];
+                const totalJulho = julhoData.reduce((s, i) => s + i.valor, 0);
+
+                const categorias = [
+                    "COARA",
+                    "COGAT",
+                    "COFIN",
+                    "CONEG",
+                    "COATE",
+                    "CODIN"
+                ];
+
+                const junhoMap = {};
+                junhoData.forEach(item => { junhoMap[item.nome] = item.valor; });
+                const julhoMap = {};
+                julhoData.forEach(item => { julhoMap[item.nome] = item.valor; });
+
+                const junhoValores = categorias.map(cat => junhoMap[cat] || 0);
+                const julhoValores = categorias.map(cat => julhoMap[cat] || 0);
+
+                const junhoPercent = junhoValores.map(v => (v / totalJunho) * 100);
+                const julhoPercent = julhoValores.map(v => (v / totalJulho) * 100);
+
+                createChartWithRetry('d11_comparativoChart', {
+                    type: 'bar',
+                    data: {
+                        labels: categorias,
+                        datasets: [{
+                            label: 'Junho (%)',
+                            data: junhoPercent,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 8,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 6,
+                                formatter: (v) => v.toFixed(1) + '%',
+                                backgroundColor: '#1e40af'
+                            }
+                        }, {
+                            label: 'Julho (%)',
+                            data: julhoPercent,
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 8,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 6,
+                                formatter: (v) => v.toFixed(1) + '%',
+                                backgroundColor: '#b45309'
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => {
+                                        let label = ctx.dataset.label || '';
+                                        let valor = ctx.raw;
+                                        return `${label}: ${valor.toFixed(1)}%`;
+                                    }
+                                },
+                                backgroundColor: '#1e293b',
+                                titleColor: '#f1f5f9',
+                                bodyColor: '#e2e8f0',
+                                borderColor: '#94a3b8',
+                                borderWidth: 1
+                            },
+                            legend: {
+                                position: 'top',
+                                labels: { color: '#334155', font: { size: 12, weight: 'bold' } }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Percentual sobre total de demandas (%)',
+                                    color: '#4b5563',
+                                    font: { weight: 'bold' }
+                                },
+                                grid: { color: '#e2e8f0' },
+                                ticks: { color: '#334155', stepSize: 10, callback: (val) => val + '%' },
+                                max: 70,
+                                min: 0
+                            },
+                            x: {
+                                ticks: { color: '#334155', font: { size: 10, weight: '500' },
+                                    maxRotation: 15, minRotation: 10 },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ─── INICIALIZAÇÃO ───
+            if (document.readyState === 'complete') {
+                setTimeout(() => activateMainTab('tab1'), 100);
+            } else {
+                window.addEventListener('load', function() {
+                    setTimeout(() => activateMainTab('tab1'), 200);
+                });
+            }
+
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 500);
+
+        })();
+    </script>
+
+</body>
+</html>
